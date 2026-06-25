@@ -1,0 +1,130 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  TEAM_MEMBER
+}
+
+enum MicrositeStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  role          UserRole  @default(TEAM_MEMBER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  microsites    Microsite[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Microsite {
+  id              String          @id @default(cuid())
+  slug            String          @unique
+  status          MicrositeStatus @default(DRAFT)
+  createdById     String
+  createdBy       User            @relation(fields: [createdById], references: [id])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Basic Information
+  projectName     String
+  builderName     String
+  location        String
+  city            String          @default("")
+  possessionDate  String          @default("")
+  projectDescription String       @db.Text @default("")
+  reraNumber      String          @default("")
+  projectType     String          @default("") // Residential, Commercial, etc.
+  priceRangeMin   String          @default("")
+  priceRangeMax   String          @default("")
+  projectHighlights String        @db.Text @default("[]")
+
+  // Builder Information
+  builderDescription String       @db.Text @default("")
+  builderExperience  String       @default("")
+  builderProjects    String       @default("")
+
+  // Uploads (cloud_storage_path values)
+  heroImages      String          @db.Text @default("[]")
+  galleryImages   String          @db.Text @default("[]")
+  masterPlanImage String          @default("")
+  builderLogoPath String          @default("")
+  brochurePath    String          @default("")
+
+  // JSON data
+  pricingData     String          @db.Text @default("[]")
+  connectivityData String         @db.Text @default("[]")
+  amenities       String          @db.Text @default("[]")
+  floorPlans      String          @db.Text @default("[]")
+  faqs            String          @db.Text @default("[]")
+  legalInfo       String          @db.Text @default("")
+  reraQrCodes     String          @db.Text @default("[]")
+
+  leads           Lead[]
+
+  @@index([status])
+  @@index([createdById])
+}
+
+model Lead {
+  id            String    @id @default(cuid())
+  micrositeId   String
+  microsite     Microsite @relation(fields: [micrositeId], references: [id], onDelete: Cascade)
+  name          String
+  phone         String
+  email         String    @default("")
+  message       String    @db.Text @default("")
+  source        String    @default("inquiry_form")
+  createdAt     DateTime  @default(now())
+
+  @@index([micrositeId])
+  @@index([createdAt])
+}
