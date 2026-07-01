@@ -80,7 +80,10 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
     masterPlanImage: initialData?.masterPlanImage ?? '',
     builderLogoPath: initialData?.builderLogoPath ?? '',
     brochurePath: initialData?.brochurePath ?? '',
-    pricingData: parseJson(initialData?.pricingData, [{ config: '', area: '', price: '', floorPlanImage: '' }]),
+    pricingData: parseJson(initialData?.pricingData, [{ config: '', area: '', price: '', floorPlanImage: '', customFields: [] }]).map((p: any) => ({
+      ...p,
+      customFields: p.customFields ?? []
+    })),
     connectivityData: parseJson(initialData?.connectivityData, [{ place: '', distance: '', time: '' }]),
     amenities: parseJson(initialData?.amenities, []),
     floorPlans: parseJson(initialData?.floorPlans, []),
@@ -197,7 +200,7 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
       const res = await fetch('/api/brochure/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pdfBase64: base64 }),
+        body: JSON.stringify({ pdfBase64: base64, fileName: file.name }),
       });
 
       if (!res.ok) {
@@ -532,9 +535,73 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
                     hint={`Upload floor plan for ${p?.config || 'this configuration'}`}
                   />
                 </div>
+
+                {/* Custom Specifications Key-Value List */}
+                <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
+                  <span className="text-xs font-semibold text-white/60">Custom Specifications (e.g. Saleable Area, Bathrooms, Balconies)</span>
+                  
+                  <div className="space-y-2">
+                    {(p.customFields ?? []).map((cf: any, cfIndex: number) => (
+                      <div key={cfIndex} className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          value={cf.key ?? ''}
+                          onChange={(e) => {
+                            const list = [...(form?.pricingData ?? [])];
+                            const cfs = [...(list[i].customFields ?? [])];
+                            cfs[cfIndex] = { ...cfs[cfIndex], key: e.target.value };
+                            list[i] = { ...list[i], customFields: cfs };
+                            updateField('pricingData', list);
+                          }}
+                          className={smallInputClass + ' flex-1'}
+                          placeholder="Specification Key (e.g. Bathrooms)"
+                        />
+                        <input
+                          type="text"
+                          value={cf.value ?? ''}
+                          onChange={(e) => {
+                            const list = [...(form?.pricingData ?? [])];
+                            const cfs = [...(list[i].customFields ?? [])];
+                            cfs[cfIndex] = { ...cfs[cfIndex], value: e.target.value };
+                            list[i] = { ...list[i], customFields: cfs };
+                            updateField('pricingData', list);
+                          }}
+                          className={smallInputClass + ' flex-1'}
+                          placeholder="Specification Value (e.g. 3)"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const list = [...(form?.pricingData ?? [])];
+                            const cfs = [...(list[i].customFields ?? [])];
+                            cfs.splice(cfIndex, 1);
+                            list[i] = { ...list[i], customFields: cfs };
+                            updateField('pricingData', list);
+                          }}
+                          className="text-white/30 hover:text-red-400 p-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const list = [...(form?.pricingData ?? [])];
+                      const cfs = [...(list[i].customFields ?? []), { key: '', value: '' }];
+                      list[i] = { ...list[i], customFields: cfs };
+                      updateField('pricingData', list);
+                    }}
+                    className="text-xs text-[#c8a45e] hover:text-[#d4b06a] flex items-center gap-1 mt-1"
+                  >
+                    <Plus className="w-2.5 h-2.5" /> Add custom field
+                  </button>
+                </div>
               </div>
             ))}
-            <button onClick={() => addListItem('pricingData', { config: '', area: '', price: '', floorPlanImage: '' })}
+            <button onClick={() => addListItem('pricingData', { config: '', area: '', price: '', floorPlanImage: '', customFields: [] })}
               className="text-sm text-[#c8a45e] hover:text-[#d4b06a] flex items-center gap-1 mt-2">
               <Plus className="w-3 h-3" /> Add Configuration
             </button>
@@ -684,9 +751,16 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
                 </div>
               ))}
               <button onClick={() => updateField('reraQrCodes', [...(form?.reraQrCodes ?? []), { towerName: '', reraNumber: '', qrImagePath: '' }])}
-                className="text-sm text-[#c8a45e] hover:text-[#d4b06a] flex items-center gap-1">
+                className="text-sm text-[#c8a45e] hover:text-[#d4b06a] flex items-center gap-1 mb-6">
                 <Plus className="w-3 h-3" /> Add RERA QR Code
               </button>
+            </div>
+
+            <div className="pt-6 border-t border-white/10 mt-6">
+              <label className={labelClass}>Custom Legal Info / Disclaimer</label>
+              <p className="text-xs text-white/40 mb-2">Provide a custom legal disclaimer to be displayed on the microsite. If left empty, the default 11 Estates disclaimer will be used.</p>
+              <textarea value={form?.legalInfo ?? ''} onChange={(e) => updateField('legalInfo', e.target.value)}
+                rows={4} className={inputClass + ' resize-none'} placeholder="e.g. The content is for information purposes only and does not constitute an offer to avail of any service..." />
             </div>
           </div>
         )}

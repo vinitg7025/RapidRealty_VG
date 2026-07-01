@@ -9,37 +9,72 @@ function shouldServeInline(contentType: string): boolean {
 }
 
 export async function generatePresignedUploadUrl(fileName: string, contentType: string, isPublic: boolean = false) {
-  const s3 = createS3Client();
-  const { bucketName, folderPrefix } = getBucketConfig();
-  const prefix = isPublic ? `${folderPrefix}public/uploads` : `${folderPrefix}uploads`;
-  const cloud_storage_path = `${prefix}/${Date.now()}-${fileName}`;
+  const hasAwsCreds = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
+  if (!hasAwsCreds) {
+    console.log('AWS credentials not detected in env, using local upload fallback');
+    const cloud_storage_path = `local-uploads/${Date.now()}-${fileName}`;
+    const uploadUrl = `/api/upload/local?path=${encodeURIComponent(cloud_storage_path)}`;
+    return { uploadUrl, cloud_storage_path };
+  }
 
-  const command = new PutObjectCommand({
-    Bucket: bucketName,
-    Key: cloud_storage_path,
-    ContentType: contentType,
-  });
+  try {
+    const s3 = createS3Client();
+    const { bucketName, folderPrefix } = getBucketConfig();
+    const prefix = isPublic ? `${folderPrefix}public/uploads` : `${folderPrefix}uploads`;
+    const cloud_storage_path = `${prefix}/${Date.now()}-${fileName}`;
 
-  const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-  return { uploadUrl, cloud_storage_path };
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: cloud_storage_path,
+      ContentType: contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    return { uploadUrl, cloud_storage_path };
+  } catch (error: any) {
+    console.warn('S3 client or getSignedUrl failed, falling back to local upload:', error.message || error);
+    const cloud_storage_path = `local-uploads/${Date.now()}-${fileName}`;
+    const uploadUrl = `/api/upload/local?path=${encodeURIComponent(cloud_storage_path)}`;
+    return { uploadUrl, cloud_storage_path };
+  }
 }
 
 export async function getFileUrl(cloud_storage_path: string, contentType: string, isPublic: boolean) {
-  const { bucketName } = getBucketConfig();
-  const s3 = createS3Client();
+  if (cloud_storage_path.startsWith('local-uploads/')) {
+    return `/${cloud_storage_path}`;
+  }
 
-  if (isPublic) {
+  const hasAwsCreds = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
+  if (!hasAwsCreds) {
+    // If it's a seed or existing path that isn't local-uploads/ but we don't have AWS credentials,
+    // we can return it as-is or fallback. Let's return the standard public S3 URL directly.
+    const { bucketName } = getBucketConfig();
     const region = process.env.AWS_REGION ?? 'us-east-1';
     return `https://${bucketName}.s3.${region}.amazonaws.com/${cloud_storage_path}`;
   }
 
-  const command = new GetObjectCommand({
-    Bucket: bucketName,
-    Key: cloud_storage_path,
-    ResponseContentDisposition: shouldServeInline(contentType) ? 'inline' : 'attachment',
-  });
+  try {
+    const { bucketName } = getBucketConfig();
+    const s3 = createS3Client();
 
-  return getSignedUrl(s3, command, { expiresIn: 3600 });
+    if (isPublic) {
+      const region = process.env.AWS_REGION ?? 'us-east-1';
+      return `https://${bucketName}.s3.${region}.amazonaws.com/${cloud_storage_path}`;
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: cloud_storage_path,
+      ResponseContentDisposition: shouldServeInline(contentType) ? 'inline' : 'attachment',
+    });
+
+    return getSignedUrl(s3, command, { expiresIn: 3600 });
+  } catch (error) {
+    // Fallback: return public URL directly if sign fails
+    const { bucketName } = getBucketConfig();
+    const region = process.env.AWS_REGION ?? 'us-east-1';
+    return `https://${bucketName}.s3.${region}.amazonaws.com/${cloud_storage_path}`;
+  }
 }
 
 export async function deleteFile(cloud_storage_path: string) {
