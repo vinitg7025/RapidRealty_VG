@@ -327,10 +327,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
             <div className="border-b border-[#4a4a4a]/10 pb-8">
               <div className="flex items-start justify-between gap-6">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
-                    <span>EXCLUSIVELY MARKETED BY 11 ESTATES</span>
-                    <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
-                  </div>
+
                   <h1 className="font-serif text-4xl md:text-5.5xl font-normal tracking-tight text-white leading-tight">
                     {data?.projectName ?? ''}
                     {data?.builderName && (
@@ -771,7 +768,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
             {/* FAQ */}
             <section ref={(el) => { sectionRefs.current['faq'] = el; }} id="faq" className="space-y-6 pt-4">
               <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
-                <span>{data?.projectName || projectName}</span>
+                <span>11 ESTATES ADVISORY CLARIFICATIONS</span>
                 <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
               </div>
               <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
