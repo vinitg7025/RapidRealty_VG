@@ -788,6 +788,52 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
               </div>
             </section>
 
+            {/* Project Dossier */}
+            {data?.brochureUrl && (
+              <section id="dossier" className="space-y-6 pt-4 border-t border-[#4a4a4a]/10">
+                <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
+                  <span>{data?.projectName || projectName}</span>
+                  <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
+                </div>
+                <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
+                  Project <span className="italic text-[#a3a3a3]/90">Dossier</span>
+                </h2>
+                
+                <div className="bg-[#1a1a1a] border border-[#4a4a4a]/10 rounded p-6 max-w-3xl space-y-6">
+                  <p className="text-xs text-[#a3a3a3]/85 leading-relaxed font-light">
+                    Everything you need to evaluate this project before making a decision.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      'Official Builder Brochure',
+                      'Floor Plans',
+                      'Project Specifications',
+                      'Amenities & Features',
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-3 bg-[#121212]/40 border border-[#4a4a4a]/10 rounded-lg p-4">
+                        <Check className="w-4 h-4 text-[#f59e0b] flex-shrink-0" />
+                        <span className="text-sm font-medium text-white">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-4 border-t border-[#4a4a4a]/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <a
+                      href={data.brochureUrl}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-[#f59e0b] hover:bg-[#d4890a] text-black px-6 py-3 rounded text-xs font-mono font-bold tracking-widest uppercase transition duration-300 cursor-pointer"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download Brochure</span>
+                    </a>
+                    <span className="text-[10px] text-[#a3a3a3]/45 tracking-wider uppercase select-none">PDF Document • Clean Copy</span>
+                  </div>
+                </div>
+              </section>
+            )}
 
           </div>
 
@@ -910,88 +956,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
         </div>
       </div>
 
-      {/* Project Dossier Section */}
-      {data?.brochureUrl && (
-        <section className="w-full bg-[#0E0E0E] py-20 md:py-24 flex flex-col items-center justify-center">
-          <div className="max-w-[700px] w-full px-6 flex flex-col items-center text-center">
-            
-            {/* Section Divider */}
-            <div className="w-[120px] h-[1px] bg-[#f59e0b]/25 mb-12"></div>
-            
-            {/* Animation Wrapper */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="w-full flex flex-col items-center"
-            >
-              {/* Document Icon (Gold Outline, 32x32, minimal) */}
-              <div className="text-[#f59e0b] select-none">
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                  />
-                </svg>
-              </div>
 
-              {/* Heading */}
-              <h2 className="font-serif text-[34px] md:text-[38px] font-semibold text-white mt-5 mb-4 leading-tight">
-                Project Dossier
-              </h2>
-
-              {/* Supporting Text */}
-              <p className="text-[17px] md:text-[18px] font-normal leading-[1.7] text-[#D5D5D5] max-w-[550px] mx-auto mb-8">
-                Everything you need to evaluate this project before making a decision.
-              </p>
-
-              {/* Included Resources List */}
-              <div className="flex flex-col items-start space-y-[14px] mx-auto w-fit text-left mb-10 select-none">
-                {[
-                  'Official Builder Brochure',
-                  'Floor Plans',
-                  'Project Specifications',
-                  'Amenities & Features',
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <Check className="w-[18px] h-[18px] text-[#f59e0b] flex-shrink-0" />
-                    <span className="font-sans text-base font-medium text-white">{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Delayed Button & Trust Note */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
-                className="flex flex-col items-center"
-              >
-                <a
-                  href={data.brochureUrl}
-                  download
-                  className="w-[260px] h-[54px] rounded-lg bg-[#f59e0b] text-black font-semibold text-[15px] flex items-center justify-center shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/25 transition-all duration-[220ms] ease-out cursor-pointer"
-                >
-                  Download Brochure
-                </a>
-                <p className="text-[13px] text-[#8A8A8A] italic mt-[18px] select-none">
-                  Official brochure provided by the developer.
-                </p>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-      )}
 
       {/* Footer */}
       <footer className="bg-brand-graphite border-t border-brand-stone/10 mt-20">
