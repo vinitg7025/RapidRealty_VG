@@ -902,10 +902,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                     </form>
                   )}
 
-                  <div className="pt-3.5 border-t border-[#333333]/30 flex items-center justify-center gap-2 text-xs text-[#A0A0A0]">
-                    <Shield className="w-3 h-3 text-amber-500 flex-shrink-0" />
-                    <span className="text-center text-[10px] leading-snug">Your details are secure & never shared with builders.</span>
-                  </div>
+
                 </div>
               </div>
             </div>
