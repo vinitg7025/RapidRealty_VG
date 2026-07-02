@@ -322,7 +322,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Main Content */}
-          <div className="flex-1 min-w-0 space-y-16">
+          <div className="flex-1 min-w-0 space-y-10">
             {/* Project Summary */}
             <div className="border-b border-[#4a4a4a]/10 pb-8">
               <div className="flex items-start justify-between gap-6">
@@ -471,23 +471,21 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
             )}
 
             {/* Master Plan */}
-            <section ref={(el) => { sectionRefs.current['masterplan'] = el; }} id="masterplan" className="space-y-6 pt-4">
-              {data?.masterPlanUrl && (
-                <>
-                  <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
-                    <span>{data?.projectName || projectName}</span>
-                    <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
-                  </div>
-                  <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
-                    Project <span className="italic text-[#a3a3a3]/90">Master Plan</span>
-                  </h2>
-                  <div className="rounded overflow-hidden bg-[#1a1a1a] border border-[#4a4a4a]/10 p-4 max-w-3xl flex flex-col items-center gap-2">
-                    <img src={data.masterPlanUrl} alt="Master Plan" className="w-full object-contain max-h-[500px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(data.masterPlanUrl)} />
-                    <p className="text-[10px] text-amber-500 font-mono tracking-wider uppercase select-none mt-1">Click to enlarge</p>
-                  </div>
-                </>
-              )}
-            </section>
+            {data?.masterPlanUrl && (
+              <section ref={(el) => { sectionRefs.current['masterplan'] = el; }} id="masterplan" className="space-y-6 pt-4">
+                <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
+                  <span>{data?.projectName || projectName}</span>
+                  <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
+                </div>
+                <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
+                  Project <span className="italic text-[#a3a3a3]/90">Master Plan</span>
+                </h2>
+                <div className="rounded overflow-hidden bg-[#1a1a1a] border border-[#4a4a4a]/10 p-4 max-w-3xl flex flex-col items-center gap-2">
+                  <img src={data.masterPlanUrl} alt="Master Plan" className="w-full object-contain max-h-[500px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(data.masterPlanUrl)} />
+                  <p className="text-[10px] text-amber-500 font-mono tracking-wider uppercase select-none mt-1">Click to enlarge</p>
+                </div>
+              </section>
+            )}
 
             {/* Amenities */}
             {amenities.length > 0 && (
