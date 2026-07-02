@@ -126,6 +126,7 @@ const SECTIONS = [
   { id: 'pricing', label: 'Floor Plans' },
   { id: 'builder', label: 'Builder' },
   { id: 'faq', label: 'FAQ' },
+  { id: 'dossier', label: 'Project Dossier' },
 ];
 
 export default function MicrositeView({ slug, projectName }: MicrositeViewProps) {
@@ -263,6 +264,9 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
       const hasBuilder = !!data?.builderDescription;
       const hasRera = reraQrCodes.length > 0 && reraQrCodes[0]?.qrImageUrl;
       return hasBuilder || hasRera;
+    }
+    if (s.id === 'dossier') {
+      return !!data?.brochureUrl;
     }
     return true;
   });
