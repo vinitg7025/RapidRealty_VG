@@ -10,6 +10,14 @@ function shouldServeInline(contentType: string): boolean {
 
 export async function generatePresignedUploadUrl(fileName: string, contentType: string, isPublic: boolean = false) {
   const hasAwsCreds = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
+  const hasVercelBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+
+  if (!hasAwsCreds && hasVercelBlob) {
+    const cloud_storage_path = `uploads/${Date.now()}-${fileName}`;
+    const uploadUrl = `/api/upload/vercel-blob?path=${encodeURIComponent(cloud_storage_path)}`;
+    return { uploadUrl, cloud_storage_path };
+  }
+
   if (!hasAwsCreds) {
     console.log('AWS credentials not detected in env, using local upload fallback');
     const cloud_storage_path = `local-uploads/${Date.now()}-${fileName}`;
@@ -40,6 +48,10 @@ export async function generatePresignedUploadUrl(fileName: string, contentType: 
 }
 
 export async function getFileUrl(cloud_storage_path: string, contentType: string, isPublic: boolean) {
+  if (cloud_storage_path.startsWith('http://') || cloud_storage_path.startsWith('https://')) {
+    return cloud_storage_path;
+  }
+
   if (cloud_storage_path.startsWith('local-uploads/')) {
     return `/${cloud_storage_path}`;
   }
