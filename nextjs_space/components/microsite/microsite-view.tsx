@@ -829,7 +829,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
 
           {/* Sticky Inquiry Form */}
           <div className="w-full lg:w-[360px] max-w-[640px] lg:max-w-none mx-auto lg:mx-0 flex-shrink-0">
-            <div className="lg:sticky lg:top-[125px] transition-all duration-300">
+            <div className="lg:sticky lg:top-[148px] transition-all duration-300">
               <div className="bg-gradient-to-b from-[#1A1A1A] to-[#0D0D0D] border border-amber-500/20 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-5 space-y-4 transition-all duration-300">
                 <div className="text-center">
                   <h3 className="font-serif text-2xl font-semibold text-amber-500 leading-[1.25]">
