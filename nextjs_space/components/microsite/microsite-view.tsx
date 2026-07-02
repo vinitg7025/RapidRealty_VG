@@ -125,8 +125,7 @@ const SECTIONS = [
   { id: 'amenities', label: 'Amenities' },
   { id: 'pricing', label: 'Floor Plans' },
   { id: 'builder', label: 'Builder' },
-  { id: 'faq', label: 'FAQ' },
-  { id: 'dossier', label: 'Project Dossier' },
+  { id: 'faq', label: 'FAQs' },
 ];
 
 export default function MicrositeView({ slug, projectName }: MicrositeViewProps) {
@@ -264,9 +263,6 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
       const hasBuilder = !!data?.builderDescription;
       const hasRera = reraQrCodes.length > 0 && reraQrCodes[0]?.qrImageUrl;
       return hasBuilder || hasRera;
-    }
-    if (s.id === 'dossier') {
-      return !!data?.brochureUrl;
     }
     return true;
   });
@@ -805,22 +801,11 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                 </h2>
                 
                 <div className="bg-[#1a1a1a] border border-[#4a4a4a]/10 rounded p-6 max-w-3xl space-y-6">
-                  <p className="text-xs text-[#a3a3a3]/85 leading-relaxed font-light">
-                    Everything you need to evaluate this project before making a decision.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                      'Official Builder Brochure',
-                      'Floor Plans',
-                      'Project Specifications',
-                      'Amenities & Features',
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-3 bg-[#121212]/40 border border-[#4a4a4a]/10 rounded-lg p-4">
-                        <Check className="w-4 h-4 text-[#f59e0b] flex-shrink-0" />
-                        <span className="text-sm font-medium text-white">{item}</span>
-                      </div>
-                    ))}
+                  <div className="space-y-2">
+                    <h3 className="font-serif text-xl text-white font-normal">Need more information?</h3>
+                    <p className="text-sm text-[#a3a3a3]/85 font-light">
+                      Get the official builder brochure.
+                    </p>
                   </div>
 
                   <div className="pt-4 border-t border-[#4a4a4a]/10 flex flex-col sm:flex-row items-center justify-between gap-4">
