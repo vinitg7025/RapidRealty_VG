@@ -79,7 +79,7 @@ function formatStatNumber(val: string) {
 
 const ELEVEN_ESTATES_FAQS = [
   {
-    question: 'Why should I work with 11 Estates instead of approaching the builder directly?',
+    question: 'Why should I work with 11 estates?',
     answer: 'Buying a home is one of the most important financial decisions you will make. 11 Estates helps simplify the process by providing expert guidance, market insights, project comparisons and negotiation support throughout your purchase journey. From identifying the right property to evaluating options, securing the best commercial terms and coordinating the transaction, our team works to ensure you make an informed decision with confidence.',
   },
   {
