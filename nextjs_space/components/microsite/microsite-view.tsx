@@ -414,27 +414,28 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                 </p>
               )}
               
-              {/* Highlights using connectivity style rows */}
+              {/* Highlights using premium editorial callouts */}
               {highlights.length > 0 && highlights[0] && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-[#4a4a4a]/10 max-w-4xl">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-8 border-t border-[#4a4a4a]/10 max-w-4xl">
                   {highlights.filter(Boolean).map((h: any, i: number) => {
                     const isObject = typeof h === 'object' && h !== null;
                     const headline = isObject ? h.headline : h;
                     const support = isObject ? h.support : '';
                     
                     return (
-                      <div key={i} className="flex items-start gap-4 p-4.5 bg-[#1a1a1a] border border-[#4a4a4a]/10 rounded hover:border-[#f59e0b]/20 transition-all duration-300 group">
-                        <span className="font-serif italic text-base md:text-lg text-[#f59e0b]/60 group-hover:text-[#f59e0b] transition-colors duration-300 w-8 flex-shrink-0 mt-0.5">
+                      <div key={i} className="flex flex-col items-start space-y-3 group">
+                        <span className="font-serif italic text-3xl md:text-4xl text-[#f59e0b]/70 group-hover:text-[#f59e0b] transition-colors duration-300 select-none">
                           {String(i + 1).padStart(2, '0')}
                         </span>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium text-white group-hover:text-[#f59e0b] transition-colors duration-300 leading-snug block">
+                        <div className="w-8 h-[1px] bg-[#f59e0b]/30 group-hover:w-12 group-hover:bg-[#f59e0b] transition-all duration-300"></div>
+                        <div className="space-y-1.5">
+                          <h3 className="font-serif text-base md:text-[17px] text-white font-normal leading-snug tracking-tight group-hover:text-[#f59e0b]/90 transition-colors duration-300">
                             {headline}
-                          </span>
+                          </h3>
                           {support && (
-                            <span className="text-xs text-[#a3a3a3]/75 font-light mt-1 block">
+                            <p className="text-xs text-[#a3a3a3]/85 font-light leading-relaxed">
                               {support}
-                            </span>
+                            </p>
                           )}
                         </div>
                       </div>
