@@ -60,45 +60,47 @@ Return ONLY valid JSON with this exact structure:
 
 Respond with raw JSON only. Do not include code blocks, markdown, or any other formatting.`;
 
-    const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      console.error('Neither GEMINI_API_KEY nor GOOGLE_API_KEY is configured.');
+      return NextResponse.json({ error: 'LLM API key is not configured.' }, { status: 500 });
+    }
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.ABACUSAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5.4-mini',
-        messages: [
+        contents: [
           {
-            role: 'user',
-            content: [
+            parts: [
               {
-                type: 'file',
-                file: {
-                  filename: fileName || 'brochure.pdf',
-                  file_data: `data:application/pdf;base64,${base64String}`,
+                inlineData: {
+                  mimeType: 'application/pdf',
+                  data: base64String,
                 },
               },
               {
-                type: 'text',
                 text: prompt,
               },
             ],
           },
         ],
-        max_tokens: 4000,
-        response_format: { type: 'json_object' },
+        generationConfig: {
+          responseMimeType: 'application/json',
+        },
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('LLM API error:', errText);
+      console.error('Gemini API error:', errText);
       return NextResponse.json({ error: 'Failed to analyze brochure. Please try again.' }, { status: 500 });
     }
 
-    const llmData = await response.json();
-    const content = llmData?.choices?.[0]?.message?.content;
+    const geminiData = await response.json();
+    const content = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!content) {
       return NextResponse.json({ error: 'No content extracted from brochure' }, { status: 500 });

@@ -48,11 +48,9 @@ export default function SignupPage() {
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 border border-[#c8a45e]/30 rounded flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-[#c8a45e]" />
-            </div>
-            <span className="font-display text-2xl tracking-wide text-white">11 Estates</span>
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-6 group select-none">
+            <div className="w-8 h-8 border border-white flex items-center justify-center font-serif text-xl text-white group-hover:bg-white group-hover:text-brand-charcoal transition-colors">11</div>
+            <span className="font-serif text-2xl tracking-tight uppercase text-white">Estates</span>
           </Link>
           <h1 className="font-display text-2xl text-white">Create your account</h1>
           <p className="text-white/40 mt-1 text-sm">Join 11 Estates to start creating microsites</p>

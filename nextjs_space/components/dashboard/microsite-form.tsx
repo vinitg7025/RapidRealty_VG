@@ -71,10 +71,25 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
     projectType: initialData?.projectType ?? 'Residential',
     priceRangeMin: initialData?.priceRangeMin ?? '',
     priceRangeMax: initialData?.priceRangeMax ?? '',
-    projectHighlights: parseJson(initialData?.projectHighlights, ['']),
+    projectHighlights: (() => {
+      const parsed = parseJson(initialData?.projectHighlights, []);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((item: any) => {
+          if (typeof item === 'string') {
+            return { headline: item, support: '' };
+          }
+          return { headline: item?.headline ?? '', support: item?.support ?? '' };
+        });
+      }
+      return [{ headline: '', support: '' }];
+    })(),
     builderDescription: initialData?.builderDescription ?? '',
     builderExperience: initialData?.builderExperience ?? '',
     builderProjects: initialData?.builderProjects ?? '',
+    builderTagline: initialData?.builderTagline ?? '',
+    builderArea: initialData?.builderArea ?? '',
+    builderOngoing: initialData?.builderOngoing ?? '',
+    builderPerspective: initialData?.builderPerspective ?? '',
     heroImages: parseJson(initialData?.heroImages, []),
     galleryImages: parseJson(initialData?.galleryImages, []),
     masterPlanImage: initialData?.masterPlanImage ?? '',
@@ -227,8 +242,13 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
         if (extracted.builderExperience && !prev.builderExperience) updated.builderExperience = extracted.builderExperience;
         if (extracted.builderProjects && !prev.builderProjects) updated.builderProjects = extracted.builderProjects;
         
-        if (extracted.projectHighlights?.length > 0 && (!prev.projectHighlights || prev.projectHighlights.length === 0 || (prev.projectHighlights.length === 1 && !prev.projectHighlights[0]))) {
-          updated.projectHighlights = extracted.projectHighlights;
+        if (extracted.projectHighlights?.length > 0 && (!prev.projectHighlights || prev.projectHighlights.length === 0 || (prev.projectHighlights.length === 1 && !prev.projectHighlights[0]?.headline))) {
+          updated.projectHighlights = extracted.projectHighlights.map((item: any) => {
+            if (typeof item === 'string') {
+              return { headline: item, support: '' };
+            }
+            return { headline: item?.headline ?? '', support: item?.support ?? '' };
+          });
         }
         if (extracted.pricingData?.length > 0 && (!prev.pricingData || prev.pricingData.length === 0 || (prev.pricingData.length === 1 && !prev.pricingData[0]?.config))) {
           updated.pricingData = extracted.pricingData.map((p: any) => ({ config: p.config ?? '', area: p.area ?? '', price: p.price ?? '', floorPlanImage: '' }));
@@ -475,24 +495,50 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
 
             <div>
               <label className={labelClass}>Project Highlights</label>
-              {(form?.projectHighlights ?? ['']).map((h: string, i: number) => (
-                <div key={i} className="flex gap-2 mb-2">
-                  <input type="text" value={h ?? ''}
-                    onChange={(e) => {
-                      const list = [...(form?.projectHighlights ?? [])];
-                      list[i] = e.target.value;
-                      updateField('projectHighlights', list);
-                    }}
-                    className={`flex-1 ${smallInputClass}`} placeholder="e.g. 5 mins from Metro Station" />
-                  <button onClick={() => {
-                    const list = [...(form?.projectHighlights ?? [])];
-                    list.splice(i, 1);
-                    updateField('projectHighlights', list.length > 0 ? list : ['']);
-                  }} className="p-2 text-white/30 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+              {(form?.projectHighlights ?? [{ headline: '', support: '' }]).map((h: any, i: number) => (
+                <div key={i} className="flex flex-col sm:flex-row gap-3 mb-3 p-3 bg-white/5 border border-white/10 rounded-lg">
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      value={h?.headline ?? ''}
+                      onChange={(e) => {
+                        const list = [...(form?.projectHighlights ?? [])];
+                        list[i] = { ...list[i], headline: e.target.value };
+                        updateField('projectHighlights', list);
+                      }}
+                      className={`w-full ${smallInputClass}`}
+                      placeholder="Headline (e.g. 1.6 Acre Expanse)"
+                    />
+                    <textarea
+                      value={h?.support ?? ''}
+                      onChange={(e) => {
+                        const list = [...(form?.projectHighlights ?? [])];
+                        list[i] = { ...list[i], support: e.target.value };
+                        updateField('projectHighlights', list);
+                      }}
+                      rows={2}
+                      className={`w-full ${smallInputClass} resize-none`}
+                      placeholder="Supporting text (e.g. Spread across a premium, expansive land parcel)"
+                    />
+                  </div>
+                  <div className="flex items-center justify-end sm:justify-start">
+                    <button
+                      onClick={() => {
+                        const list = [...(form?.projectHighlights ?? [])];
+                        list.splice(i, 1);
+                        updateField('projectHighlights', list.length > 0 ? list : [{ headline: '', support: '' }]);
+                      }}
+                      className="p-2 text-white/30 hover:text-red-400"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
-              <button onClick={() => updateField('projectHighlights', [...(form?.projectHighlights ?? []), ''])}
-                className="text-sm text-[#c8a45e] hover:text-[#d4b06a] flex items-center gap-1 mt-1">
+              <button
+                onClick={() => updateField('projectHighlights', [...(form?.projectHighlights ?? []), { headline: '', support: '' }])}
+                className="text-sm text-[#c8a45e] hover:text-[#d4b06a] flex items-center gap-1 mt-1"
+              >
                 <Plus className="w-3 h-3" /> Add Highlight
               </button>
             </div>
@@ -680,21 +726,41 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
         {activeTab === 5 && (
           <div className="space-y-5">
             <div>
+              <label className={labelClass}>Builder Tagline</label>
+              <input type="text" value={form?.builderTagline ?? ''} onChange={(e) => updateField('builderTagline', e.target.value)}
+                className={inputClass} placeholder="e.g. Built on trust. Delivering excellence since 1969." />
+            </div>
+            <div>
               <label className={labelClass}>Builder Description</label>
               <textarea value={form?.builderDescription ?? ''} onChange={(e) => updateField('builderDescription', e.target.value)}
                 rows={4} className={inputClass + ' resize-none'} placeholder="About the builder..." />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
               <div>
                 <label className={labelClass}>Years of Experience</label>
                 <input type="text" value={form?.builderExperience ?? ''} onChange={(e) => updateField('builderExperience', e.target.value)}
-                  className={inputClass} placeholder="e.g. 25+ Years" />
+                  className={inputClass} placeholder="e.g. 57" />
               </div>
               <div>
                 <label className={labelClass}>Total Projects Delivered</label>
                 <input type="text" value={form?.builderProjects ?? ''} onChange={(e) => updateField('builderProjects', e.target.value)}
                   className={inputClass} placeholder="e.g. 100+" />
               </div>
+              <div>
+                <label className={labelClass}>Area Delivered (Sq.ft.)</label>
+                <input type="text" value={form?.builderArea ?? ''} onChange={(e) => updateField('builderArea', e.target.value)}
+                  className={inputClass} placeholder="e.g. 7.4 Mn" />
+              </div>
+              <div>
+                <label className={labelClass}>Ongoing Developments</label>
+                <input type="text" value={form?.builderOngoing ?? ''} onChange={(e) => updateField('builderOngoing', e.target.value)}
+                  className={inputClass} placeholder="e.g. 28" />
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>11 Estates Perspective</label>
+              <textarea value={form?.builderPerspective ?? ''} onChange={(e) => updateField('builderPerspective', e.target.value)}
+                rows={3} className={inputClass + ' resize-none'} placeholder="Write advisor perspective..." />
             </div>
           </div>
         )}

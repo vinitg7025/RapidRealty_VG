@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, ArrowRight, Globe, Users, BarChart3 } from 'lucide-react';
+import { Building2, ArrowRight, Globe, Users, BarChart3, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -8,22 +8,26 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 border border-[#c8a45e]/30 rounded flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-[#c8a45e]" />
-            </div>
-            <span className="font-display text-xl tracking-wide">11 Estates</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/auth/login" className="text-sm text-white/60 hover:text-white transition">
-              Sign In
+      <header className="fixed top-0 w-full z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5 py-4">
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+          <Link className="flex items-center gap-2 group" href="/">
+            <div className="w-8 h-8 border border-white flex items-center justify-center font-serif text-xl text-white group-hover:bg-white group-hover:text-brand-charcoal transition-colors">11</div>
+            <span className="font-serif text-2xl tracking-tight uppercase text-white">Estates</span>
+          </Link>
+          <div className="hidden md:flex items-center gap-8">
+            <Link className="text-sm font-medium tracking-wide uppercase transition-colors text-white" href="/commercial">Commercial</Link>
+            <Link className="text-sm font-medium tracking-wide uppercase transition-colors text-brand-silver hover:text-white" href="/residential">Residential</Link>
+            <Link className="text-sm font-medium tracking-wide uppercase transition-colors text-brand-silver hover:text-white" href="/#insights">Insights</Link>
+            <Link className="bg-white text-brand-charcoal px-6 py-2.5 text-xs font-semibold uppercase tracking-widest hover:bg-brand-silver transition-colors flex items-center gap-2 text-black" href="/#contact">
+              Discuss a Requirement <ArrowRight className="w-3 h-3" />
             </Link>
-            <Link href="/auth/signup" className="text-sm px-5 py-2 border border-[#c8a45e] text-[#c8a45e] hover:bg-[#c8a45e] hover:text-black transition font-medium">
-              Get Started
+            <Link className="text-sm font-medium tracking-wide uppercase transition-colors text-amber-500/80 hover:text-amber-500 ml-4 border-l border-white/10 pl-4" href="/auth/login">
+              Portal
             </Link>
           </div>
+          <button className="md:hidden text-white">
+            <Menu className="w-6 h-6" />
+          </button>
         </div>
       </header>
 
@@ -83,9 +87,9 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-white/5 py-10">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-[#c8a45e]" />
-            <span className="font-display text-sm">11 Estates</span>
+          <div className="flex items-center gap-2.5 group select-none">
+            <div className="w-8 h-8 border border-white flex items-center justify-center font-serif text-xl text-white group-hover:bg-white group-hover:text-brand-charcoal transition-colors">11</div>
+            <span className="font-serif text-2xl tracking-tight uppercase text-white">Estates</span>
           </div>
           <p className="text-xs text-white/30">Premium real estate advisory</p>
         </div>

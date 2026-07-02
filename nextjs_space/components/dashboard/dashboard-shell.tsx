@@ -30,11 +30,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center justify-between p-5 border-b border-white/10">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#c8a45e] to-[#a68540] rounded-lg flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-black" />
-            </div>
-            <span className="font-display text-lg font-bold tracking-tight text-white">11 Estates</span>
+          <Link href="/dashboard" className="flex items-center gap-2.5 group select-none">
+            <div className="w-8 h-8 border border-white flex items-center justify-center font-serif text-xl text-white group-hover:bg-white group-hover:text-brand-charcoal transition-colors">11</div>
+            <span className="font-serif text-2xl tracking-tight uppercase text-white">Estates</span>
           </Link>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/40 hover:text-white">
             <X className="w-5 h-5" />
@@ -86,7 +84,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <button onClick={() => setSidebarOpen(true)} className="text-white/60">
             <Menu className="w-5 h-5" />
           </button>
-          <span className="font-display font-bold text-white">11 Estates</span>
+          <span className="font-serif text-xl tracking-tight uppercase text-white">11 Estates</span>
         </header>
         <main className="flex-1 p-6 lg:p-8 overflow-auto">
           {children}

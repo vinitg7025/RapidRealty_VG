@@ -91,6 +91,10 @@ model Microsite {
   builderDescription String       @db.Text @default("")
   builderExperience  String       @default("")
   builderProjects    String       @default("")
+  builderTagline     String       @default("")
+  builderArea        String       @default("")
+  builderOngoing     String       @default("")
+  builderPerspective String       @db.Text @default("")
 
   // Uploads (cloud_storage_path values)
   heroImages      String          @db.Text @default("[]")

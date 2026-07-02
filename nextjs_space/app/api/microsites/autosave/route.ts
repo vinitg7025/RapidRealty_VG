@@ -20,7 +20,8 @@ export async function POST(request: Request) {
       const fields = ['slug', 'status', 'projectName', 'builderName', 'location', 'city',
         'possessionDate', 'projectDescription', 'reraNumber', 'projectType',
         'priceRangeMin', 'priceRangeMax', 'builderDescription', 'builderExperience',
-        'builderProjects', 'masterPlanImage', 'builderLogoPath', 'brochurePath', 'legalInfo'];
+        'builderProjects', 'builderTagline', 'builderArea', 'builderOngoing',
+        'builderPerspective', 'masterPlanImage', 'builderLogoPath', 'brochurePath', 'legalInfo'];
       fields.forEach(f => { if (data[f] !== undefined) result[f] = data[f]; });
       const jsonFields = ['projectHighlights', 'heroImages', 'galleryImages', 'pricingData',
         'connectivityData', 'amenities', 'floorPlans', 'faqs', 'reraQrCodes'];
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
       const updateData = buildData(formData);
+      console.log('Autosave updateData payload:', updateData);
       const microsite = await prisma.microsite.update({ where: { id }, data: updateData });
       return NextResponse.json({ microsite, isNew: false });
     } else {

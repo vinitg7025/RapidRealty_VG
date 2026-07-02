@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Building2, MapPin, Calendar, IndianRupee, Phone, Mail, User, ChevronLeft, ChevronRight, 
   Download, Check, ArrowRight, HelpCircle, Shield, Star, Clock, Loader2, ChevronDown,
-  Waves, Dumbbell, TreePine, Zap, Car, Eye, ShoppingBag, Gamepad2, Sparkles
+  Waves, Dumbbell, TreePine, Zap, Car, Eye, ShoppingBag, Gamepad2, Sparkles,
+  ArrowUpDown, Flame, Droplet, PhoneCall, BookOpen, Tv, Scissors, Baby, Heart, ChevronRight as ChevronRightIcon,
+  Percent, Handshake, Compass
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface MicrositeViewProps {
@@ -31,18 +33,49 @@ function getHighlightIcon(text: string) {
   return <Check className="w-5 h-5 text-[#f59e0b]" />;
 }
 
-const AMENITY_ICONS: Record<string, string> = {
-  'Swimming Pool': '🏊', 'Gymnasium': '🏋️', 'Clubhouse': '🏠', 'Children Play Area': '🧒',
-  'Jogging Track': '🏃', 'Landscaped Gardens': '🌳', 'Indoor Games': '🎮', 'Multipurpose Hall': '🏛️',
-  'Power Backup': '⚡', 'CCTV Surveillance': '📹', 'Intercom': '📞', 'Lift': '🛗',
-  'Car Parking': '🅿️', 'Visitor Parking': '🚗', 'Rain Water Harvesting': '💧',
-  'Sewage Treatment Plant': '♻️', 'Fire Fighting System': '🧯', 'Badminton Court': '🏸',
-  'Tennis Court': '🎾', 'Basketball Court': '🏀', 'Yoga Room': '🧘', 'Library': '📚',
-  'Meditation Zone': '🧘‍♂️', 'Party Lawn': '🎉', 'Pet Park': '🐕', 'Senior Citizen Area': '👴',
-  'Amphitheatre': '🎭', 'Co-Working Space': '💻', 'Cycling Track': '🚴', 'Squash Court': '🏓',
-  'Table Tennis': '🏓', 'Skating Rink': '⛸️', 'Mini Theatre': '🎬', 'Convenience Store': '🏪',
-  'Salon': '💇', 'Creche': '👶', 'Pharmacy': '💊',
-};
+function toSentenceCase(str: string) {
+  if (!str) return '';
+  const clean = str.trim();
+  return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
+}
+
+function getAmenityIcon(name: string) {
+  const t = name.toLowerCase();
+  if (t.includes('pool') || t.includes('swim')) return <Waves className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('gym') || t.includes('fitness') || t.includes('health') || t.includes('workout')) return <Dumbbell className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('club') || t.includes('lounge') || t.includes('house') || t.includes('community')) return <Building2 className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('kid') || t.includes('play') || t.includes('child')) return <Gamepad2 className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('jogging') || t.includes('track') || t.includes('cycle') || t.includes('cycling') || t.includes('court') || t.includes('rink') || t.includes('tennis') || t.includes('badminton') || t.includes('squash') || t.includes('game') || t.includes('table')) return <Gamepad2 className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('garden') || t.includes('lawn') || t.includes('park') || t.includes('tree') || t.includes('green') || t.includes('landscaped')) return <TreePine className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('cctv') || t.includes('security') || t.includes('surveillance')) return <Shield className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('power') || t.includes('backup') || t.includes('electricity') || t.includes('zap')) return <Zap className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('intercom') || t.includes('phone') || t.includes('call')) return <PhoneCall className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('lift') || t.includes('elevator')) return <ArrowUpDown className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('car') || t.includes('parking') || t.includes('visitor')) return <Car className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('water') || t.includes('rain') || t.includes('harvest')) return <Droplet className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('fire') || t.includes('fighting') || t.includes('extinguisher') || t.includes('system')) return <Flame className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('yoga') || t.includes('meditation') || t.includes('zen') || t.includes('wellness')) return <Heart className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('library') || t.includes('book') || t.includes('reading')) return <BookOpen className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('theatre') || t.includes('cinema') || t.includes('movie') || t.includes('screen')) return <Tv className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('salon') || t.includes('spa') || t.includes('hair') || t.includes('beauty')) return <Scissors className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('creche') || t.includes('daycare') || t.includes('nursery')) return <Baby className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  if (t.includes('store') || t.includes('retail') || t.includes('shop') || t.includes('pharmacy') || t.includes('convenience')) return <ShoppingBag className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+  
+  return <Sparkles className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
+}
+
+function formatStatNumber(val: string) {
+  if (!val) return '0';
+  const match = val.match(/^([0-9.+]+)\s*(.*)$/);
+  if (match) {
+    return (
+      <>
+        {match[1]}{match[2] && <span className="text-xs md:text-sm font-light text-amber-500/90 ml-1">{match[2]}</span>}
+      </>
+    );
+  }
+  return val;
+}
 
 const ELEVEN_ESTATES_FAQS = [
   {
@@ -106,6 +139,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
   const [submitted, setSubmitted] = useState(false);
   const [activeFloorPlanTab, setActiveFloorPlanTab] = useState(0);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [activeFaqIndex, setActiveFaqIndex] = useState<number | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
@@ -235,45 +269,55 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
 
   return (
     <div className="min-h-screen bg-[#121212] font-sans antialiased text-[#a3a3a3]">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#121212]/95 backdrop-blur-md border-b border-[#4a4a4a]/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-[#f59e0b] to-[#b47b0e] rounded flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-black" />
-            </div>
-            <span className="font-serif text-xl font-bold tracking-tight text-white">11 Estates</span>
+      {/* Sticky Header & Nav Wrapper */}
+      <div className="sticky top-0 z-50 bg-[#121212]">
+        {/* Header */}
+        <header className="bg-[#121212]/95 backdrop-blur-md border-b border-[#4a4a4a]/10">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="https://www.11estates.in/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 group select-none">
+              <div className="w-8 h-8 border border-white flex items-center justify-center font-serif text-xl text-white group-hover:bg-white group-hover:text-[#121212] transition-colors">11</div>
+              <span className="font-serif text-2xl tracking-tight uppercase text-white">Estates</span>
+            </a>
           </div>
-          <a href="tel:+918454989005" className="inline-flex items-center gap-2 group">
-            <span className="hidden sm:inline font-mono text-[10px] tracking-wider text-[#a3a3a3]/50">SPEAK TO AN ADVISOR:</span>
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 to-[#f59e0b] text-black rounded text-xs font-mono font-bold tracking-wider hover:opacity-90 transition-all shadow-lg shadow-amber-500/10">
-              <Phone className="w-3.5 h-3.5" />
-              +91-8454989005
-            </span>
-          </a>
-        </div>
-      </header>
+        </header>
 
-      {/* Section Navigation */}
-      <nav className="sticky top-[69px] z-40 bg-[#1a1a1a]/95 backdrop-blur-md border-b border-[#4a4a4a]/10">
-        <div className="max-w-7xl mx-auto px-6 overflow-x-auto scrollbar-none">
-          <div className="flex gap-2 py-3">
-            {visibleSections.map((s: any) => (
-              <button
-                key={s.id}
-                onClick={() => scrollToSection(s.id)}
-                className={`px-4 py-1.5 rounded text-xs font-mono tracking-widest uppercase transition-all duration-300 ${
-                  activeSection === s.id
-                    ? 'bg-[#f59e0b] text-black font-semibold'
-                    : 'text-[#a3a3a3]/60 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
+        {/* Section Navigation */}
+        <nav className="bg-[#1a1a1a]/95 backdrop-blur-md border-b border-[#4a4a4a]/10 py-3.5">
+          <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-6">
+            <div className="overflow-x-auto scrollbar-none flex-1">
+              <div className="flex gap-8 items-center">
+                {visibleSections.map((s: any) => (
+                  <button
+                    key={s.id}
+                    onClick={() => scrollToSection(s.id)}
+                    className={`relative py-1 text-sm tracking-wide uppercase transition-all duration-300 whitespace-nowrap outline-none ${
+                      activeSection === s.id
+                        ? 'text-white font-semibold brightness-105'
+                        : 'text-[#a3a3a3]/75 font-medium hover:text-white/90'
+                    }`}
+                  >
+                    <span className="relative z-10">{s.label}</span>
+                    {activeSection === s.id && (
+                      <motion.div
+                        layoutId="activeUnderline"
+                        className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-amber-500"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <a
+              href="tel:+918454989005"
+              className="hidden md:flex items-center gap-2 bg-white text-[#121212] px-6 py-2.5 text-xs font-semibold uppercase tracking-widest hover:bg-[#a3a3a3] transition-colors flex-shrink-0"
+            >
+              <Phone className="w-3.5 h-3.5" />
+              <span>Call: +91-8454989005</span>
+            </a>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </div>
 
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col lg:flex-row gap-12">
@@ -287,23 +331,26 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                     <span>EXCLUSIVELY MARKETED BY 11 ESTATES</span>
                     <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
                   </div>
-                  <h1 className="font-serif text-4xl md:text-5xl font-normal tracking-tight text-white leading-tight">
+                  <h1 className="font-serif text-4xl md:text-5.5xl font-normal tracking-tight text-white leading-tight">
                     {data?.projectName ?? ''}
+                    {data?.builderName && (
+                      <>
+                        <span className="text-[#8A8A8A] font-sans italic font-light text-[0.55em] lowercase mx-2 select-none">by</span>
+                        <span className="text-amber-500 font-serif italic font-normal text-[0.75em] md:text-[0.8em]">{data.builderName}</span>
+                      </>
+                    )}
                   </h1>
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-light text-[#a3a3a3]/70">
-                    <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#f59e0b]" /> {data?.location ?? ''}{data?.city ? `, ${data.city}` : ''}</span>
-                    {data?.possessionDate && <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#f59e0b]" /> Possession: {data.possessionDate}</span>}
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm md:text-base font-light text-brand-silver/90">
+                    <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-amber-500" /> {data?.location ?? ''}{data?.city ? `, ${data.city}` : ''}</span>
+                    {data?.possessionDate && <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-amber-500" /> Possession: {data.possessionDate}</span>}
                     {data?.priceRangeMin && (
-                      <span className="flex items-center gap-1 font-semibold text-[#f59e0b]">
-                        <IndianRupee className="w-3.5 h-3.5" />
+                      <span className="flex items-center gap-1 font-semibold text-amber-500">
+                        <IndianRupee className="w-4 h-4" />
                         {data.priceRangeMin}{data?.priceRangeMax ? ` - ₹${data.priceRangeMax}` : ''}
                       </span>
                     )}
                   </div>
                 </div>
-                {data?.builderLogoUrl && (
-                  <img src={data.builderLogoUrl} alt={`${data?.builderName ?? ''} logo`} className="w-20 h-20 object-contain rounded bg-[#1a1a1a] border border-[#4a4a4a]/15 p-2 flex-shrink-0" />
-                )}
               </div>
             </div>
 
@@ -354,12 +401,11 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
             {/* Overview Section */}
             <section ref={(el) => { sectionRefs.current['overview'] = el; }} id="overview" className="space-y-6 pt-4">
               <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
-                <span>PROJECT INTRO & HIGHLIGHTS</span>
+                <span>{data?.projectName || projectName}</span>
                 <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
               </div>
-              <h2 className="text-3xl font-serif text-white tracking-tight leading-none">
-                Exclusive Overview <br />
-                <span className="italic block text-[#a3a3a3]/80 mt-1">and Highlights</span>
+              <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
+                Overview & <span className="italic text-[#a3a3a3]/90">Highlights</span>
               </h2>
               {data?.projectDescription && (
                 <p className="text-[#a3a3a3]/85 text-sm font-light leading-relaxed max-w-3xl whitespace-pre-line">
@@ -369,15 +415,30 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
               
               {/* Highlights using connectivity style rows */}
               {highlights.length > 0 && highlights[0] && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-[#4a4a4a]/10 max-w-3xl">
-                  {highlights.filter(Boolean).map((h: string, i: number) => (
-                    <div key={i} className="flex items-center gap-4 p-4.5 bg-[#1a1a1a] border border-[#4a4a4a]/10 rounded hover:border-[#f59e0b]/20 transition-all duration-300 group">
-                      <span className="font-serif italic text-base md:text-lg text-[#f59e0b]/60 group-hover:text-[#f59e0b] transition-colors duration-300 w-8 flex-shrink-0">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <span className="text-sm font-medium text-white group-hover:text-[#f59e0b] transition-colors duration-300 leading-snug">{h}</span>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-[#4a4a4a]/10 max-w-4xl">
+                  {highlights.filter(Boolean).map((h: any, i: number) => {
+                    const isObject = typeof h === 'object' && h !== null;
+                    const headline = isObject ? h.headline : h;
+                    const support = isObject ? h.support : '';
+                    
+                    return (
+                      <div key={i} className="flex items-start gap-4 p-4.5 bg-[#1a1a1a] border border-[#4a4a4a]/10 rounded hover:border-[#f59e0b]/20 transition-all duration-300 group">
+                        <span className="font-serif italic text-base md:text-lg text-[#f59e0b]/60 group-hover:text-[#f59e0b] transition-colors duration-300 w-8 flex-shrink-0 mt-0.5">
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-white group-hover:text-[#f59e0b] transition-colors duration-300 leading-snug block">
+                            {headline}
+                          </span>
+                          {support && (
+                            <span className="text-xs text-[#a3a3a3]/75 font-light mt-1 block">
+                              {support}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </section>
@@ -386,12 +447,11 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
             {connectivity.length > 0 && connectivity[0]?.place && (
               <section ref={(el) => { sectionRefs.current['connectivity'] = el; }} id="connectivity" className="space-y-6 pt-4">
                 <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
-                  <span>LOCATION ADVANTAGE</span>
+                  <span>{data?.projectName || projectName}</span>
                   <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
                 </div>
-                <h2 className="text-3xl font-serif text-white tracking-tight leading-none">
-                  Seamless Connectivity <br />
-                  <span className="italic block text-[#a3a3a3]/80 mt-1">& Transit Hubs</span>
+                <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
+                  Seamless <span className="italic text-[#a3a3a3]/90">Connectivity</span>
                 </h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
@@ -401,9 +461,10 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                         <MapPin className="w-4 h-4 text-[#f59e0b]/60 group-hover:text-[#f59e0b] transition-colors duration-300" />
                         <span className="text-sm font-medium text-white group-hover:text-[#f59e0b] transition-colors duration-300">{c?.place ?? ''}</span>
                       </div>
-                      <div className="text-right font-mono text-xs">
-                        <span className="text-white/80">{c?.distance ?? ''}</span>
-                        {c?.time && <span className="text-[#f59e0b] ml-2">({c.time})</span>}
+                      <div className="text-right font-mono text-xs flex items-center gap-1.5 select-none">
+                        {c?.time && <span className="text-[#f59e0b]">{c.time}</span>}
+                        {c?.time && c?.distance && <span className="text-[#a3a3a3]/30">|</span>}
+                        {c?.distance && <span className="text-[#8A8A8A]">{c.distance}</span>}
                       </div>
                     </div>
                   ))}
@@ -416,15 +477,15 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
               {data?.masterPlanUrl && (
                 <>
                   <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
-                    <span>DEVELOPMENT BLUEPRINT</span>
+                    <span>{data?.projectName || projectName}</span>
                     <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
                   </div>
-                  <h2 className="text-3xl font-serif text-white tracking-tight leading-none">
-                    Project Master Plan <br />
-                    <span className="italic block text-[#a3a3a3]/80 mt-1">& Layout</span>
+                  <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
+                    Project <span className="italic text-[#a3a3a3]/90">Master Plan</span>
                   </h2>
-                  <div className="rounded overflow-hidden bg-[#1a1a1a] border border-[#4a4a4a]/10 p-4 max-w-3xl">
+                  <div className="rounded overflow-hidden bg-[#1a1a1a] border border-[#4a4a4a]/10 p-4 max-w-3xl flex flex-col items-center gap-2">
                     <img src={data.masterPlanUrl} alt="Master Plan" className="w-full object-contain max-h-[500px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(data.masterPlanUrl)} />
+                    <p className="text-[10px] text-amber-500 font-mono tracking-wider uppercase select-none mt-1">Click to enlarge</p>
                   </div>
                 </>
               )}
@@ -434,19 +495,22 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
             {amenities.length > 0 && (
               <section ref={(el) => { sectionRefs.current['amenities'] = el; }} id="amenities" className="space-y-6 pt-4">
                 <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
-                  <span>LUXURY AMENITIES</span>
+                  <span>{data?.projectName || projectName}</span>
                   <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
                 </div>
-                <h2 className="text-3xl font-serif text-white tracking-tight leading-none">
-                  Curated Lifestyle <br />
-                  <span className="italic block text-[#a3a3a3]/80 mt-1">& Conveniences</span>
+                <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
+                  Curated <span className="italic text-[#a3a3a3]/90">Amenities</span>
                 </h2>
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-w-4xl">
                   {amenities.map((a: string, i: number) => (
-                    <div key={i} className="flex items-center gap-2.5 p-3.5 bg-[#1a1a1a] border border-[#4a4a4a]/10 rounded hover:border-[#f59e0b]/20 transition-all duration-300">
-                      <span className="text-lg flex-shrink-0">{AMENITY_ICONS[a] ?? '✓'}</span>
-                      <span className="text-xs font-mono uppercase tracking-wider text-white/80">{a}</span>
+                    <div key={i} className="flex items-center gap-3 p-4 bg-[#1a1a1a] border border-[#4a4a4a]/10 rounded hover:border-[#f59e0b]/20 transition-all duration-300 group">
+                      <div className="text-[#f59e0b]/60 group-hover:text-[#f59e0b] transition-colors duration-300 flex-shrink-0">
+                        {getAmenityIcon(a)}
+                      </div>
+                      <span className="text-sm font-medium text-white group-hover:text-[#f59e0b] transition-colors duration-300">
+                        {toSentenceCase(a)}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -457,12 +521,11 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
             {pricing.length > 0 && pricing[0]?.config && (
               <section ref={(el) => { sectionRefs.current['pricing'] = el; }} id="pricing" className="space-y-6 pt-4">
                 <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
-                  <span>PRICING & CONFIGURATIONS</span>
+                  <span>{data?.projectName || projectName}</span>
                   <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
                 </div>
-                <h2 className="text-3xl font-serif text-white tracking-tight leading-none">
-                  Architectural Floor Plans <br />
-                  <span className="italic block text-[#a3a3a3]/80 mt-1">& Unit Sizes</span>
+                <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
+                  Architectural <span className="italic text-[#a3a3a3]/90">Floor Plans</span>
                 </h2>
                 <p className="text-xs text-[#a3a3a3]/60 max-w-2xl font-light leading-relaxed">
                   {data?.projectName ?? ''} offers configurations including {pricing.filter((p: any) => p?.config).map((p: any) => p.config).join(', ')}. Details are curated below.
@@ -537,13 +600,14 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                         </div>
 
                         {hasFloorPlanImg && (
-                          <div className="md:w-1/2 flex items-center justify-center bg-black/20 rounded p-4 border border-[#4a4a4a]/10">
+                          <div className="md:w-1/2 flex flex-col items-center justify-center bg-black/20 rounded p-4 border border-[#4a4a4a]/10 gap-2">
                             <img
                               src={activeConfig.floorPlanImageUrl}
                               alt={`${activeConfig.config} Floor Plan`}
                               className="w-full object-contain max-h-[300px] cursor-zoom-in hover:opacity-95 transition-opacity duration-300"
                               onClick={() => setLightboxImage(activeConfig.floorPlanImageUrl)}
                             />
+                            <p className="text-[10px] text-amber-500 font-mono tracking-wider uppercase select-none mt-1">Click to enlarge</p>
                           </div>
                         )}
                       </div>
@@ -566,8 +630,9 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
                   {floorPlanUrls.filter(Boolean).map((url: string, i: number) => (
-                    <div key={i} className="rounded overflow-hidden bg-[#1a1a1a] border border-[#4a4a4a]/10 p-4">
+                    <div key={i} className="rounded overflow-hidden bg-[#1a1a1a] border border-[#4a4a4a]/10 p-4 flex flex-col items-center gap-2">
                       <img src={url} alt={`Floor Plan ${i + 1}`} className="w-full object-contain max-h-[350px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(url)} />
+                      <p className="text-[10px] text-amber-500 font-mono tracking-wider uppercase select-none mt-1">Click to enlarge</p>
                     </div>
                   ))}
                 </div>
@@ -578,56 +643,106 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
             {(data?.builderDescription || (reraQrCodes.length > 0 && reraQrCodes[0]?.qrImageUrl)) && (
               <section ref={(el) => { sectionRefs.current['builder'] = el; }} id="builder" className="space-y-6 pt-4">
                 <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
-                  <span>DEVELOPER PROFILE</span>
+                  <span>{data?.projectName || projectName}</span>
                   <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
                 </div>
-                <h2 className="text-3xl font-serif text-white tracking-tight leading-none">
-                  Developer Profile <br />
-                  <span className="italic block text-[#a3a3a3]/80 mt-1">About Builder</span>
+                <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
+                  About <span className="italic text-[#a3a3a3]/90">Builder</span>
                 </h2>
                 
                 <div className="bg-[#1a1a1a] border border-[#4a4a4a]/10 rounded p-6 max-w-3xl space-y-6">
                   {data?.builderDescription && (
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-4 pb-4 border-b border-[#4a4a4a]/10">
+                    <div className="space-y-6">
+                      <div className="flex items-start gap-4 pb-3 border-b border-[#4a4a4a]/10">
                         {data?.builderLogoUrl && (
-                          <img src={data.builderLogoUrl} alt="" className="w-16 h-16 object-contain rounded bg-[#121212] border border-[#4a4a4a]/10 p-1 flex-shrink-0 cursor-zoom-in hover:opacity-90 transition-opacity duration-300" onClick={() => setLightboxImage(data.builderLogoUrl)} />
+                          <img src={data.builderLogoUrl} alt="" className="w-16 h-16 object-contain rounded bg-[#121212] p-1 flex-shrink-0 cursor-zoom-in hover:opacity-90 transition-opacity duration-300" onClick={() => setLightboxImage(data.builderLogoUrl)} />
                         )}
-                        <div className="space-y-1">
-                          <h3 className="font-serif text-xl text-white font-normal">{data?.builderName ?? ''}</h3>
-                          
-                          {/* High-End Statistic Grid */}
-                          <div className="flex gap-6 mt-2">
-                            {data?.builderExperience && (
-                              <div className="flex flex-col">
-                                <span className="text-xs font-serif text-white">{data.builderExperience}</span>
-                                <span className="text-[8px] uppercase tracking-widest text-[#f59e0b] font-mono">EXPERIENCE</span>
-                              </div>
-                            )}
-                            {data?.builderProjects && (
-                              <div className="flex flex-col">
-                                <span className="text-xs font-serif text-white">{data.builderProjects}</span>
-                                <span className="text-[8px] uppercase tracking-widest text-[#f59e0b] font-mono">PROJECTS DELIVERED</span>
-                              </div>
-                            )}
-                          </div>
+                        <div className="space-y-1.5 flex-1 pt-1">
+                          <h3 className="font-serif text-2xl text-white font-normal leading-none">{data?.builderName ?? ''}</h3>
+                          {data?.builderTagline && (
+                            <p className="text-xs text-white/90 font-sans tracking-wide font-light">{data.builderTagline}</p>
+                          )}
                         </div>
                       </div>
-                      <p className="text-[#a3a3a3]/80 text-sm font-light leading-relaxed whitespace-pre-line">
+
+                      {/* High-End Statistic Grid */}
+                      {(data?.builderExperience || data?.builderProjects || data?.builderArea || data?.builderOngoing) && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 md:gap-y-0 py-3 border-b border-[#4a4a4a]/10 select-none">
+                          {/* Stat 1: Experience */}
+                          {data?.builderExperience && (
+                            <div className="flex flex-col items-center text-center border-r border-[#4a4a4a]/10">
+                              <span className="text-3xl md:text-4xl font-serif text-[#f59e0b] font-semibold tracking-tight">
+                                {formatStatNumber(data.builderExperience)}
+                              </span>
+                              <span className="text-sm font-medium text-white mt-1">Years</span>
+                              <span className="text-[10px] text-[#a3a3a3]/55 font-light uppercase tracking-wider">Experience</span>
+                            </div>
+                          )}
+                          {/* Stat 2: Projects */}
+                          {data?.builderProjects && (
+                            <div className="flex flex-col items-center text-center md:border-r border-[#4a4a4a]/10">
+                              <span className="text-3xl md:text-4xl font-serif text-[#f59e0b] font-semibold tracking-tight">
+                                {formatStatNumber(data.builderProjects)}
+                              </span>
+                              <span className="text-sm font-medium text-white mt-1">Projects</span>
+                              <span className="text-[10px] text-[#a3a3a3]/55 font-light uppercase tracking-wider">Delivered</span>
+                            </div>
+                          )}
+                          {/* Stat 3: Area */}
+                          {data?.builderArea && (
+                            <div className="flex flex-col items-center text-center border-r border-[#4a4a4a]/10">
+                              <span className="text-3xl md:text-4xl font-serif text-[#f59e0b] font-semibold tracking-tight">
+                                {formatStatNumber(data.builderArea)}
+                              </span>
+                              <span className="text-sm font-medium text-white mt-1">Sq.ft.</span>
+                              <span className="text-[10px] text-[#a3a3a3]/55 font-light uppercase tracking-wider">Delivered</span>
+                            </div>
+                          )}
+                          {/* Stat 4: Ongoing */}
+                          {data?.builderOngoing && (
+                            <div className="flex flex-col items-center text-center">
+                              <span className="text-3xl md:text-4xl font-serif text-[#f59e0b] font-semibold tracking-tight">
+                                {formatStatNumber(data.builderOngoing)}
+                              </span>
+                              <span className="text-sm font-medium text-white mt-1">Ongoing</span>
+                              <span className="text-[10px] text-[#a3a3a3]/55 font-light uppercase tracking-wider">Developments</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <p className="text-[#a3a3a3]/80 text-sm font-light leading-relaxed whitespace-pre-line pt-2">
                         {data.builderDescription}
                       </p>
+
+                      {/* 11 Estates Perspective Block */}
+                      {data?.builderPerspective && (
+                        <div className="flex gap-4 p-5 bg-[#121212]/40 border border-[#f59e0b]/10 rounded-lg mt-6">
+                          <div className="text-[#f59e0b] select-none flex-shrink-0 pt-0.5">
+                            <svg className="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.154c-2.434.914-4.01 3.636-4.01 5.846h4v10h-9.986z"/>
+                            </svg>
+                          </div>
+                          <div className="space-y-1 flex-1">
+                            <h4 className="text-xs font-mono uppercase tracking-wider text-[#f59e0b]">11 Estates Perspective</h4>
+                            <p className="text-sm text-white/95 font-light leading-relaxed">
+                              {data.builderPerspective}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
                   {/* RERA QR Codes inside same block */}
                   {reraQrCodes.length > 0 && reraQrCodes[0]?.qrImageUrl && (
                     <div className={`pt-6 ${data?.builderDescription ? 'border-t border-[#4a4a4a]/10' : ''} space-y-4`}>
-                      <h4 className="text-xs font-mono uppercase tracking-widest text-[#f59e0b] mb-1">RERA COMPLIANCE STATUS</h4>
+                      <h4 className="text-xs font-mono uppercase tracking-widest text-[#f59e0b] mb-1">RERA Status</h4>
                       <div className={`grid gap-6 ${reraQrCodes.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
                         {reraQrCodes.filter((r: any) => r?.qrImageUrl).map((r: any, i: number) => (
-                          <div key={i} className="flex items-start gap-4">
-                            <div className="w-24 h-24 flex-shrink-0 bg-white rounded p-1 border border-[#4a4a4a]/15">
-                              <img src={r.qrImageUrl} alt={`RERA QR - ${r?.towerName ?? ''}`} className="w-full h-full object-contain cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(r.qrImageUrl)} />
+                          <div key={i} className="flex items-center gap-4 bg-[#121212]/40 border border-[#4a4a4a]/10 rounded-lg p-4">
+                            <div className="w-20 h-20 flex-shrink-0 bg-white rounded p-1">
+                              <img src={r.qrImageUrl} alt="" className="w-full h-full object-contain cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(r.qrImageUrl)} />
                             </div>
                             <div className="space-y-1">
                               {r?.towerName && (
@@ -656,125 +771,144 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
             {/* FAQ */}
             <section ref={(el) => { sectionRefs.current['faq'] = el; }} id="faq" className="space-y-6 pt-4">
               <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.3em] text-[#f59e0b] uppercase">
-                <span>ADVISORY CLARIFICATIONS</span>
+                <span>{data?.projectName || projectName}</span>
                 <span className="w-8 h-[1px] bg-[#4a4a4a]/30"></span>
               </div>
-              <h2 className="text-3xl font-serif text-white tracking-tight leading-none">
-                Frequently Asked <br />
-                <span className="italic block text-[#a3a3a3]/80 mt-1">Questions</span>
+              <h2 className="text-4xl md:text-5.5xl font-serif text-white tracking-tight leading-none">
+                Frequently Asked <span className="italic text-[#a3a3a3]/90">Questions</span>
               </h2>
               
               <div className="space-y-2.5 max-w-3xl">
                 {ELEVEN_ESTATES_FAQS.map((f: any, i: number) => (
-                  <FaqItem key={i} question={f.question} answer={f.answer} />
+                  <FaqItem
+                    key={i}
+                    question={f.question}
+                    answer={f.answer}
+                    isOpen={activeFaqIndex === i}
+                    onToggle={() => setActiveFaqIndex(activeFaqIndex === i ? null : i)}
+                  />
                 ))}
               </div>
             </section>
 
-            {/* Brochure Download */}
-            {data?.brochureUrl && (
-              <div className="max-w-3xl p-6 bg-[#1a1a1a] border border-[#4a4a4a]/10 rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <h3 className="font-serif text-lg text-white font-normal">Project Brochure</h3>
-                  <p className="text-xs text-[#a3a3a3]/50">Download the comprehensive PDF for project highlights, specifications, and details.</p>
-                </div>
-                <a href={data.brochureUrl} download className="font-mono text-[10px] uppercase tracking-widest text-[#f59e0b] hover:text-white transition-colors flex items-center gap-2 group border-b border-[#f59e0b]/30 pb-0.5 mt-2 sm:mt-0">
-                  <span>Download Document</span>
-                  <Download className="w-3.5 h-3.5 group-hover:translate-y-0.5 transition-transform duration-300" />
-                </a>
-              </div>
-            )}
+
           </div>
 
           {/* Sticky Inquiry Form */}
-          <div className="lg:w-[360px] flex-shrink-0">
-            <div className="lg:sticky lg:top-[120px]">
-              <div className="bg-[#1a1a1a] rounded border border-[#4a4a4a]/10 p-6 space-y-6">
-                <div>
-                  <div className="flex items-center gap-3 font-mono text-[8px] tracking-[0.2em] text-[#f59e0b] uppercase mb-2">
-                    <span>PORTFOLIO ADVISORY</span>
-                  </div>
-                  <h3 className="font-serif text-2xl text-white font-normal leading-tight">Work With 11 Estates</h3>
-                  <p className="text-xs text-[#a3a3a3]/50 mt-1">Zero fees. Buyer-aligned advisory backed by 40+ years experience.</p>
+          <div className="w-full lg:w-[360px] max-w-[640px] lg:max-w-none mx-auto lg:mx-0 flex-shrink-0">
+            <div className="lg:sticky lg:top-[125px] transition-all duration-300">
+              <div className="bg-gradient-to-b from-[#1A1A1A] to-[#0D0D0D] border border-amber-500/20 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-5 space-y-4 transition-all duration-300">
+                <div className="text-center">
+                  <h3 className="font-serif text-2xl font-semibold text-amber-500 leading-[1.25]">
+                    Work With <span className="text-[1.15em] leading-none">11</span> Estates
+                  </h3>
+                  <p className="text-xs text-[#E6E6E6]/90 font-normal leading-relaxed mt-2">
+                    You pay nothing. We represent your interests and negotiate with builders on your behalf.
+                  </p>
                 </div>
 
-                <div className="space-y-3 pt-4 border-t border-[#4a4a4a]/10">
+                <div className="space-y-2.5 pt-1">
                   {[
-                    'Zero Brokerage, Complete Transparency',
-                    'Best Negotiated Pricing Evaluated',
-                    'Expert Representation from Search to Signing',
-                  ].map((item: string, i: number) => (
-                    <div key={i} className="flex items-start gap-2.5 text-xs text-[#a3a3a3]/80">
-                      <Check className="w-4 h-4 text-[#f59e0b] flex-shrink-0 mt-0.5" />
-                      <span>{item}</span>
-                    </div>
-                  ))}
+                    { text: 'No Brokerage, No Service Fees', icon: Percent },
+                    { text: 'Best Negotiated Price', icon: Handshake },
+                    { text: 'Expert Guidance Throughout The Purchase', icon: Compass },
+                  ].map((item: any, i: number) => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={i} className="flex items-center gap-3 group select-none">
+                        <div className="w-7 h-7 rounded-full border border-amber-500/20 flex items-center justify-center flex-shrink-0 text-amber-500 bg-[#1A1A1A] group-hover:border-amber-500/50 transition-colors duration-200">
+                          <Icon className="w-3 h-3" />
+                        </div>
+                        <span className="text-xs text-[#E6E6E6] font-light leading-snug">{item.text}</span>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="border-t border-[#4a4a4a]/10 pt-4 space-y-4">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-mono tracking-widest uppercase text-[#a3a3a3]/40">INTEGRATION DIRECT LINE</p>
-                    <a href="tel:+918454989005" className="flex items-center gap-2.5 px-3 py-2 bg-emerald-500/5 border border-emerald-500/20 rounded hover:bg-emerald-500/10 transition group">
-                      <Phone className="w-4 h-4 text-emerald-400" />
-                      <span className="text-sm font-mono font-semibold text-emerald-400 group-hover:text-emerald-300">+91-8454989005</span>
-                    </a>
+                <div className="border-t border-[#333333]/30 pt-4 space-y-3">
+                  <div className="text-center">
+                    <p className="text-xs text-[#A0A0A0] leading-normal">
+                      Speak with an advisor before you commit to a unit.
+                    </p>
                   </div>
 
                   {submitted ? (
-                    <div className="text-center py-6 bg-emerald-500/5 rounded border border-emerald-500/10">
-                      <div className="w-10 h-10 bg-emerald-500/15 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <Check className="w-5 h-5 text-emerald-400" />
+                    <div className="text-center py-5 bg-emerald-500/5 rounded-[10px] border border-emerald-500/10">
+                      <div className="w-8 h-8 bg-emerald-500/15 rounded-full flex items-center justify-center mx-auto mb-1.5">
+                        <Check className="w-4 h-4 text-emerald-400" />
                       </div>
-                      <p className="font-serif text-sm text-white">Advisory Brief Requested</p>
-                      <p className="text-[10px] text-[#a3a3a3]/50 mt-0.5">We will reach out to you shortly.</p>
+                      <p className="font-serif text-sm text-white">Enquiry Submitted</p>
+                      <p className="text-[10px] text-brand-silver/50 mt-0.5">An advisor will reach out to you shortly.</p>
                     </div>
                   ) : (
-                    <form onSubmit={handleLeadSubmit} className="space-y-3 pt-2">
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a3a3a3]/30" />
-                        <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full pl-10 pr-4 py-2.5 bg-[#121212] border border-[#4a4a4a]/15 rounded text-xs text-white placeholder:text-white/20 focus:ring-1 focus:ring-[#f59e0b]/50 focus:border-[#f59e0b]/50 outline-none transition"
-                          placeholder="Name *" required />
+                    <form onSubmit={handleLeadSubmit} className="space-y-2.5 pt-1">
+                      <div className="relative group">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9A9A9A] group-focus-within:text-amber-500 transition-colors duration-200" />
+                        <input
+                          type="text"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full bg-[#1A1A1A] border border-[#333333] rounded-[10px] pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-[#9A9A9A] focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 focus:shadow-[0_0_8px_rgba(245,158,11,0.15)] outline-none transition-all duration-200"
+                          placeholder="Full Name"
+                          required
+                        />
                       </div>
                       
-                      <div className="flex gap-1.5">
+                      <div className="flex gap-2">
                         <select
                           value={formData.countryCode}
                           onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
-                          className="w-[130px] px-2 py-2.5 bg-[#121212] border border-[#4a4a4a]/15 rounded text-xs text-white focus:ring-1 focus:ring-[#f59e0b]/50 focus:border-[#f59e0b]/50 outline-none flex-shrink-0 transition"
+                          className="w-[80px] bg-[#1A1A1A] border border-[#333333] rounded-[10px] px-2.5 py-2.5 text-xs text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all duration-200 cursor-pointer"
                         >
                           {COUNTRY_CODES.map(cc => (
-                            <option key={cc.code} value={cc.code}>{cc.label}</option>
+                            <option key={cc.code} value={cc.code} className="bg-[#1A1A1A] text-white text-xs">{cc.label}</option>
                           ))}
                         </select>
-                        <div className="relative flex-1">
-                          <input type="tel" value={formData.phone}
+                        <div className="relative flex-1 group">
+                          <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9A9A9A] group-focus-within:text-amber-500 transition-colors duration-200" />
+                          <input
+                            type="tel"
+                            value={formData.phone}
                             onChange={(e) => {
                               setFormData({ ...formData, phone: e.target.value });
                               setPhoneError('');
                             }}
-                            className={`w-full px-3 py-2.5 bg-[#121212] border rounded text-xs text-white placeholder:text-white/20 focus:ring-1 focus:ring-[#f59e0b]/50 focus:border-[#f59e0b]/50 outline-none transition ${
-                              phoneError ? 'border-red-400/50' : 'border-[#4a4a4a]/15'
+                            className={`w-full bg-[#1A1A1A] border rounded-[10px] pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-[#9A9A9A] focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 focus:shadow-[0_0_8px_rgba(245,158,11,0.15)] outline-none transition-all duration-200 ${
+                              phoneError ? 'border-red-400/50' : 'border-[#333333]'
                             }`}
-                            placeholder="Mobile Number *" required />
+                            placeholder="Mobile Number"
+                            required
+                          />
                         </div>
                       </div>
-                      {phoneError && <p className="text-[10px] text-red-400 mt-1 font-mono">{phoneError}</p>}
+                      {phoneError && <p className="text-[10px] text-red-400 mt-0.5 font-mono">{phoneError}</p>}
                       
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a3a3a3]/30" />
-                        <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full pl-10 pr-4 py-2.5 bg-[#121212] border border-[#4a4a4a]/15 rounded text-xs text-white placeholder:text-white/20 focus:ring-1 focus:ring-[#f59e0b]/50 focus:border-[#f59e0b]/50 outline-none transition"
-                          placeholder="Email (optional)" />
+                      <div className="relative group">
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9A9A9A] group-focus-within:text-amber-500 transition-colors duration-200" />
+                        <input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full bg-[#1A1A1A] border border-[#333333] rounded-[10px] pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-[#9A9A9A] focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 focus:shadow-[0_0_8px_rgba(245,158,11,0.15)] outline-none transition-all duration-200"
+                          placeholder="Email Address"
+                        />
                       </div>
                       
-                      <button type="submit" disabled={submitting}
-                        className="w-full py-3 bg-[#f59e0b] hover:bg-[#d4890a] text-black font-semibold rounded text-xs tracking-wider uppercase transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2">
-                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-                        {submitting ? 'Connecting...' : 'Request Advisory Brief'}
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-[#0A0A0A] font-semibold rounded-xl text-sm tracking-wider uppercase transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 mt-4 hover:scale-[1.02] hover:shadow-[0_10px_20px_rgba(245,158,11,0.25)] cursor-pointer"
+                      >
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Get Best Offer</span>}
+                        {!submitting && <ArrowRight className="w-3.5 h-3.5" />}
                       </button>
                     </form>
                   )}
+
+                  <div className="pt-3.5 border-t border-[#333333]/30 flex items-center justify-center gap-2 text-xs text-[#A0A0A0]">
+                    <Shield className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                    <span className="text-center text-[10px] leading-snug">Your details are secure & never shared with builders.</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -782,19 +916,154 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-[#1a1a1a] border-t border-[#4a4a4a]/10 mt-20">
-        <div className="max-w-7xl mx-auto px-6 py-12 space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#4a4a4a]/10 pb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#f59e0b]/10 rounded flex items-center justify-center">
-                <Building2 className="w-4 h-4 text-[#f59e0b]" />
+      {/* Project Dossier Section */}
+      {data?.brochureUrl && (
+        <section className="w-full bg-[#0E0E0E] py-20 md:py-24 flex flex-col items-center justify-center">
+          <div className="max-w-[700px] w-full px-6 flex flex-col items-center text-center">
+            
+            {/* Section Divider */}
+            <div className="w-[120px] h-[1px] bg-[#f59e0b]/25 mb-12"></div>
+            
+            {/* Animation Wrapper */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="w-full flex flex-col items-center"
+            >
+              {/* Document Icon (Gold Outline, 32x32, minimal) */}
+              <div className="text-[#f59e0b] select-none">
+                <svg
+                  className="w-8 h-8"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                  />
+                </svg>
               </div>
-              <span className="font-serif text-lg font-bold text-white">11 Estates</span>
-            </div>
-            <p className="text-xs font-mono tracking-widest text-[#a3a3a3]/45 uppercase">YOUR TRUSTED REAL ESTATE ADVISORY PARTNER</p>
+
+              {/* Heading */}
+              <h2 className="font-serif text-[34px] md:text-[38px] font-semibold text-white mt-5 mb-4 leading-tight">
+                Project Dossier
+              </h2>
+
+              {/* Supporting Text */}
+              <p className="text-[17px] md:text-[18px] font-normal leading-[1.7] text-[#D5D5D5] max-w-[550px] mx-auto mb-8">
+                Everything you need to evaluate this project before making a decision.
+              </p>
+
+              {/* Included Resources List */}
+              <div className="flex flex-col items-start space-y-[14px] mx-auto w-fit text-left mb-10 select-none">
+                {[
+                  'Official Builder Brochure',
+                  'Floor Plans',
+                  'Project Specifications',
+                  'Amenities & Features',
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <Check className="w-[18px] h-[18px] text-[#f59e0b] flex-shrink-0" />
+                    <span className="font-sans text-base font-medium text-white">{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Delayed Button & Trust Note */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+                className="flex flex-col items-center"
+              >
+                <a
+                  href={data.brochureUrl}
+                  download
+                  className="w-[260px] h-[54px] rounded-lg bg-[#f59e0b] text-black font-semibold text-[15px] flex items-center justify-center shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/25 transition-all duration-[220ms] ease-out cursor-pointer"
+                >
+                  Download Brochure
+                </a>
+                <p className="text-[13px] text-[#8A8A8A] italic mt-[18px] select-none">
+                  Official brochure provided by the developer.
+                </p>
+              </motion.div>
+            </motion.div>
           </div>
-          <p className="text-[10px] text-[#a3a3a3]/30 leading-relaxed whitespace-pre-line">
+        </section>
+      )}
+
+      {/* Footer */}
+      <footer className="bg-brand-graphite border-t border-brand-stone/10 mt-20">
+        <div className="max-w-7xl mx-auto px-6 py-12 space-y-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 border-b border-brand-stone/10 pb-8">
+            <div className="space-y-4">
+              <a href="https://www.11estates.in/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 group">
+                <div className="w-7 h-7 bg-white text-brand-charcoal rounded flex items-center justify-center font-serif text-sm font-semibold tracking-tighter select-none group-hover:bg-brand-silver transition-colors">
+                  11
+                </div>
+                <span className="font-serif text-2xl tracking-tight uppercase text-white">Estates</span>
+              </a>
+              <p className="text-sm font-light text-brand-silver/80 leading-relaxed max-w-md">
+                A premium national commercial real estate advisory firm built for enterprises, investors, and developers across India.
+              </p>
+              <div className="space-y-1 font-mono text-[9px] tracking-widest text-brand-silver/45 uppercase leading-normal">
+                <p>Unit 127, The Summit Business Bay</p>
+                <p>Gundavali, Andheri East, Mumbai,</p>
+                <p>Maharashtra 400093</p>
+              </div>
+              <p className="text-xs text-brand-silver/70">
+                <a href="mailto:priyanka@11estates.in" className="hover:text-white transition-colors">priyanka@11estates.in</a>
+              </p>
+              <div className="flex gap-6 font-mono text-[9px] tracking-widest uppercase text-brand-silver/60 pt-4">
+                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Linkedin</a>
+                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Twitter</a>
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Instagram</a>
+              </div>
+            </div>
+
+            {/* Middle Columns Grid */}
+            <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-8 lg:justify-end">
+              {/* Advisory Hubs */}
+              <div className="space-y-4">
+                <h4 className="font-mono text-[10px] tracking-[0.2em] uppercase text-white font-semibold">Advisory Hubs</h4>
+                <ul className="space-y-2.5 text-xs text-brand-silver/75 font-light">
+                  <li><a href="https://www.11estates.in/commercial" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Commercial Leasing</a></li>
+                  <li><a href="https://www.11estates.in/commercial" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Enterprise Expansion</a></li>
+                  <li><a href="https://www.11estates.in/commercial" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Commercial Investments</a></li>
+                  <li><a href="https://www.11estates.in/commercial" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Industrial & Logistics</a></li>
+                  <li><a href="https://www.11estates.in/residential" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Curated Residential</a></li>
+                </ul>
+              </div>
+
+              {/* Corporate */}
+              <div className="space-y-4">
+                <h4 className="font-mono text-[10px] tracking-[0.2em] uppercase text-white font-semibold">Corporate</h4>
+                <ul className="space-y-2.5 text-xs text-brand-silver/75 font-light">
+                  <li><a href="https://www.11estates.in/#insights" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Insights & Intelligence</a></li>
+                  <li><a href="https://www.11estates.in/#contact" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Contact Advisory</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-brand-stone/10 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[9px] font-mono tracking-widest text-brand-silver/45 uppercase">
+            <p>© 2026 11 Estates Private Limited. All rights reserved.</p>
+            <div className="flex gap-6">
+              <a href="https://www.11estates.in/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Privacy Policy</a>
+              <a href="https://www.11estates.in/terms" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Terms of Service</a>
+            </div>
+          </div>
+
+          {/* Compliance Disclaimer */}
+          <p className="text-[10px] text-brand-silver/30 leading-relaxed font-light whitespace-pre-line border-t border-brand-stone/5 pt-4">
             {data?.legalInfo?.trim() || "Disclaimer: The content provided on this page is for information purposes only. This website is a private initiative managed by 11 Estates, a real estate advisory company, and does not represent the official platform of the developer. All visuals, specifications, and prices are subject to developer amendments."}
           </p>
         </div>
@@ -825,19 +1094,45 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
   );
 }
 
-function FaqItem({ question, answer }: { question: string; answer: string }) {
-  const [open, setOpen] = useState(false);
+function FaqItem({ question, answer, isOpen, onToggle }: { question: string; answer: string; isOpen: boolean; onToggle: () => void }) {
   return (
-    <div className="border border-[#4a4a4a]/10 rounded bg-[#1a1a1a] overflow-hidden">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-4.5 text-left hover:bg-white/5 transition duration-300">
-        <span className="text-sm font-serif text-white font-normal pr-4">{question}</span>
-        <ChevronDown className={`w-4 h-4 text-[#a3a3a3]/40 flex-shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <div className="px-4.5 pb-4.5 border-t border-[#4a4a4a]/10 pt-3">
-          <p className="text-xs text-[#a3a3a3]/75 leading-relaxed font-light">{answer}</p>
+    <div className={`border rounded-sm transition-all duration-300 ${isOpen
+        ? 'bg-[#242424] border-[#f59e0b] shadow-lg shadow-black/10'
+        : 'bg-[#1a1a1a] border-[#4a4a4a]/10 hover:border-[#4a4a4a]/20'
+      }`}>
+      <button
+        onClick={onToggle}
+        className="w-full text-left p-6 md:p-8 flex justify-between items-center gap-6 focus:outline-none group select-none"
+        aria-expanded={isOpen}
+      >
+        <span className="font-serif text-lg md:text-xl text-white group-hover:text-[#f59e0b] transition-colors duration-300">
+          {question}
+        </span>
+        <div className={`w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${isOpen ? 'border-[#f59e0b]/50' : 'border-[#4a4a4a]/25 group-hover:border-[#f59e0b]/50'
+          }`}>
+          <ChevronRight className={`w-4 h-4 transition-all duration-300 ${isOpen ? 'rotate-90 text-[#f59e0b]' : 'text-[#a3a3a3] group-hover:text-[#f59e0b]'
+            }`} />
         </div>
-      )}
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{
+              height: { duration: isOpen ? 0.25 : 0.18, ease: isOpen ? 'easeOut' : 'easeIn' },
+              opacity: { duration: 0.18, ease: 'linear' }
+            }}
+            className="overflow-hidden"
+          >
+            <div className="px-6 pb-8 md:px-8 md:pb-10 pt-0 text-[#a3a3a3]/90 text-sm font-light leading-relaxed border-t border-[#4a4a4a]/5">
+              {answer}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

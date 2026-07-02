@@ -49,7 +49,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const fields = ['slug', 'status', 'projectName', 'builderName', 'location', 'city',
       'possessionDate', 'projectDescription', 'reraNumber', 'projectType',
       'priceRangeMin', 'priceRangeMax', 'builderDescription', 'builderExperience',
-      'builderProjects', 'masterPlanImage', 'builderLogoPath', 'brochurePath', 'legalInfo'];
+      'builderProjects', 'builderTagline', 'builderArea', 'builderOngoing',
+      'builderPerspective', 'masterPlanImage', 'builderLogoPath', 'brochurePath', 'legalInfo'];
 
     fields.forEach((f: string) => { if (body[f] !== undefined) updateData[f] = body[f]; });
 
@@ -57,6 +58,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       'connectivityData', 'amenities', 'floorPlans', 'faqs', 'reraQrCodes'];
     jsonFields.forEach((f: string) => { if (body[f] !== undefined) updateData[f] = JSON.stringify(body[f]); });
 
+    console.log('PUT request body:', body);
+    console.log('PUT updateData payload:', updateData);
     const microsite = await prisma.microsite.update({ where: { id: params.id }, data: updateData });
     return NextResponse.json({ microsite });
   } catch (error: any) {
