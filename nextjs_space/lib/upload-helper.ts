@@ -1,19 +1,3 @@
-import { upload } from '@vercel/blob/client';
-
-function sanitizeFilename(originalName: string): string {
-  const parts = originalName.split('.');
-  const ext = parts.pop() || '';
-  const base = parts.join('.');
-  
-  // Clean base name: lowercase, replace spaces and special characters with hyphens
-  const cleanBase = base
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-    
-  return `${cleanBase || 'file'}-${Date.now()}.${ext}`;
-}
-
 export async function uploadFileToS3(file: File, isPublic: boolean = true, projectId?: string): Promise<string> {
   // 1. Client-side validation: unsupported file type
   const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -29,27 +13,39 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
     throw new Error(`File is too large (${(file.size / (1024 * 1024)).toFixed(2)} MB). Max limit is 50 MB.`);
   }
 
-  const sanitizedName = sanitizeFilename(file.name);
+  // 3. Helper function to sanitize name locally for logging & fallback
+  const parts = file.name.split('.');
+  const ext = parts.pop() || '';
+  const base = parts.join('.');
+  const cleanBase = base
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  const sanitizedName = `${cleanBase || 'file'}-${Date.now()}.${ext}`;
 
   try {
-    console.log(`[Client Upload] starting Vercel Blob client upload for: ${sanitizedName} (size: ${(file.size / (1024 * 1024)).toFixed(2)} MB, project: ${projectId})`);
+    console.log(`[Client Upload] starting server-side upload for: ${sanitizedName} (size: ${(file.size / (1024 * 1024)).toFixed(2)} MB, project: ${projectId})`);
 
-    // 3. Try Vercel Blob direct client upload
-    const blob = await upload(sanitizedName, file, {
-      access: 'public',
-      handleUploadUrl: '/api/upload/vercel-blob',
-      clientPayload: JSON.stringify({
-        fileName: sanitizedName,
-        fileType: file.type,
-        fileSize: file.size,
-        projectId: projectId ?? '',
-      }),
+    // 4. Perform server-side upload using FormData
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('projectId', projectId ?? '');
+
+    const res = await fetch('/api/upload/server', {
+      method: 'POST',
+      body: formData,
     });
 
-    console.log('[Client Upload] Vercel Blob upload completed. URL:', blob.url);
-    return blob.url;
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Server-side upload failed');
+    }
+
+    console.log('[Client Upload] server-side upload completed. URL:', data.fileUrl);
+    return data.fileUrl;
   } catch (error: any) {
-    console.warn('[Client Upload] Vercel Blob upload failed, checking local development fallback...', error.message || error);
+    console.warn('[Client Upload] Server-side upload failed, checking local development fallback...', error.message || error);
     
     // Check if we are running locally on localhost
     const isLocalhost = typeof window !== 'undefined' && 
@@ -81,7 +77,7 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
       return resolvedUrl;
     }
 
-    // If not on localhost, throw the original Vercel Blob error
+    // If not on localhost, throw the original error
     throw error;
   }
 }
