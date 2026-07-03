@@ -41,8 +41,41 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     // Check slug uniqueness if changed
     if (body.slug && body.slug !== existing.slug) {
+      // Check reserved slug protection
+      const RESERVED_BUILDER_SLUGS = [
+        'commercial', 'residential', 'about', 'contact', 'insights',
+        'api', 'admin', 'login', 'dashboard', 'projects', 'project',
+        'builder', 'builders'
+      ];
+      const builderSlug = body.slug.split('/')[0]?.toLowerCase();
+      if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
+        return NextResponse.json(
+          { error: 'The builder slug/name cannot be a reserved word (e.g. contact, about, api...)' },
+          { status: 400 }
+        );
+      }
+
       const slugExists = await prisma.microsite.findUnique({ where: { slug: body.slug } });
       if (slugExists) return NextResponse.json({ error: 'URL slug already taken' }, { status: 400 });
+
+      // Handle redirect mapping if published
+      if (existing.status === 'PUBLISHED') {
+        const oldSlug = existing.slug;
+        const newSlug = body.slug;
+        
+        // 1. Create or update the redirect from oldSlug to newSlug
+        await prisma.slugRedirect.upsert({
+          where: { oldSlug },
+          update: { newSlug },
+          create: { oldSlug, newSlug }
+        });
+
+        // 2. Prevent redirect chains: find any existing redirects pointing to oldSlug and update their target to newSlug
+        await prisma.slugRedirect.updateMany({
+          where: { newSlug: oldSlug },
+          data: { newSlug }
+        });
+      }
     }
 
     const updateData: any = {};

@@ -149,6 +149,19 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     if (!(form?.projectName ?? '').trim()) { toast.error('Project name is required to save'); return; }
     if (!(form?.slug ?? '').trim()) { toast.error('URL slug is required to save'); return; }
+    
+    // Client-side reserved slug validation
+    const RESERVED_BUILDER_SLUGS = [
+      'commercial', 'residential', 'about', 'contact', 'insights',
+      'api', 'admin', 'login', 'dashboard', 'projects', 'project',
+      'builder', 'builders'
+    ];
+    const builderSlug = (form?.slug ?? '').split('/')[0]?.toLowerCase();
+    if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
+      toast.error('The builder slug/name cannot be a reserved word (e.g. contact, about, api...)');
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = { ...form, id: micrositeId };
@@ -427,7 +440,7 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
             <div>
               <label className={labelClass}>URL Slug *</label>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-white/30 whitespace-nowrap">yoursite.com/{form?.builderName ? slugify(form.builderName) + '/' : ''}</span>
+                <span className="text-sm text-white/30 whitespace-nowrap">https://11estates.in/{form?.builderName ? slugify(form.builderName) + '/' : ''}</span>
                 <input type="text" value={(form?.slug ?? '').replace(form?.builderName ? slugify(form.builderName) + '/' : '', '')}
                   onChange={(e) => {
                     const prefix = form?.builderName ? slugify(form.builderName) + '/' : '';
@@ -435,7 +448,7 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
                   }}
                   className={`flex-1 ${inputClass}`} placeholder="project-name" />
               </div>
-              <p className="text-xs text-white/25 mt-1">Full URL: yoursite.com/{form?.slug ?? ''}</p>
+              <p className="text-xs text-white/25 mt-1">Full URL: https://11estates.in/{form?.slug ?? ''}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

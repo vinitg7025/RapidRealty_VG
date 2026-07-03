@@ -35,6 +35,22 @@ export async function POST(request: Request) {
     const userId = (session.user as any).id;
     const body = await request.json();
 
+    // Check reserved slug protection
+    const RESERVED_BUILDER_SLUGS = [
+      'commercial', 'residential', 'about', 'contact', 'insights',
+      'api', 'admin', 'login', 'dashboard', 'projects', 'project',
+      'builder', 'builders'
+    ];
+    if (body.slug) {
+      const builderSlug = body.slug.split('/')[0]?.toLowerCase();
+      if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
+        return NextResponse.json(
+          { error: 'The builder slug/name cannot be a reserved word (e.g. contact, about, api...)' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check slug uniqueness
     const existingSlug = await prisma.microsite.findUnique({ where: { slug: body.slug } });
     if (existingSlug) {

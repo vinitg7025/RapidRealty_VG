@@ -132,3 +132,11 @@ model Lead {
   @@index([micrositeId])
   @@index([createdAt])
 }
+
+model SlugRedirect {
+  id        String   @id @default(cuid())
+  oldSlug   String   @unique
+  newSlug   String
+  createdAt DateTime @default(now())
+}
+

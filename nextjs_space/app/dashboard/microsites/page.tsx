@@ -108,14 +108,14 @@ export default function MicrositesPage() {
                   </div>
                   <p className="text-sm text-white/40 mb-2">{m?.builderName ?? ''} • {m?.location ?? ''}{m?.city ? `, ${m.city}` : ''}</p>
                   <div className="flex items-center gap-4 text-xs text-white/25">
-                    <span>/{m?.slug ?? ''}</span>
+                    <span>https://11estates.in/{m?.slug ?? ''}</span>
                     <span>{m?._count?.leads ?? 0} leads</span>
                     <span>by {m?.createdBy?.name ?? 'Unknown'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   {m?.status === 'PUBLISHED' && (
-                    <Link href={`/${m.slug}`} target="_blank" className="p-2 text-white/30 hover:text-[#c8a45e] hover:bg-[#c8a45e]/10 rounded-lg transition" title="View live">
+                    <Link href={`https://11estates.in/${m.slug}`} target="_blank" className="p-2 text-white/30 hover:text-[#c8a45e] hover:bg-[#c8a45e]/10 rounded-lg transition" title="View live">
                       <ExternalLink className="w-4 h-4" />
                     </Link>
                   )}

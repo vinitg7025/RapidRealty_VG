@@ -1,6 +1,6 @@
 import MicrositeView from '@/components/microsite/microsite-view';
 import { prisma } from '@/lib/prisma';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 // Reserve known paths
 const RESERVED_SLUGS = ['dashboard', 'auth', 'api', '_next', 'favicon.ico'];
@@ -20,6 +20,12 @@ export default async function MicrositePage({ params }: { params: { slug: string
   });
 
   if (!microsite || microsite.status !== 'PUBLISHED') {
+    const redirectRecord = await prisma.slugRedirect.findUnique({
+      where: { oldSlug: fullSlug },
+    });
+    if (redirectRecord) {
+      redirect(`/${redirectRecord.newSlug}`);
+    }
     notFound();
   }
 

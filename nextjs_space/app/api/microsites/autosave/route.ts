@@ -38,6 +38,46 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
       const updateData = buildData(formData);
+
+      // Validate slug if updated during autosave
+      if (updateData.slug && updateData.slug !== existing.slug) {
+        // Check reserved slug protection
+        const RESERVED_BUILDER_SLUGS = [
+          'commercial', 'residential', 'about', 'contact', 'insights',
+          'api', 'admin', 'login', 'dashboard', 'projects', 'project',
+          'builder', 'builders'
+        ];
+        const builderSlug = updateData.slug.split('/')[0]?.toLowerCase();
+        if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
+          return NextResponse.json(
+            { error: 'The builder slug/name cannot be a reserved word (e.g. contact, about, api...)' },
+            { status: 400 }
+          );
+        }
+
+        const slugExists = await prisma.microsite.findUnique({ where: { slug: updateData.slug } });
+        if (slugExists) {
+          return NextResponse.json({ error: 'Slug already taken' }, { status: 400 });
+        }
+
+        // Handle redirect mapping if published
+        if (existing.status === 'PUBLISHED') {
+          const oldSlug = existing.slug;
+          const newSlug = updateData.slug;
+          
+          await prisma.slugRedirect.upsert({
+            where: { oldSlug },
+            update: { newSlug },
+            create: { oldSlug, newSlug }
+          });
+
+          await prisma.slugRedirect.updateMany({
+            where: { newSlug: oldSlug },
+            data: { newSlug }
+          });
+        }
+      }
+
       console.log('Autosave updateData payload:', updateData);
       const microsite = await prisma.microsite.update({ where: { id }, data: updateData });
       return NextResponse.json({ microsite, isNew: false });
@@ -46,6 +86,21 @@ export async function POST(request: Request) {
       if (!formData.slug || !formData.projectName) {
         return NextResponse.json({ error: 'Project name and slug required for auto-save' }, { status: 400 });
       }
+
+      // Check reserved slug protection
+      const RESERVED_BUILDER_SLUGS = [
+        'commercial', 'residential', 'about', 'contact', 'insights',
+        'api', 'admin', 'login', 'dashboard', 'projects', 'project',
+        'builder', 'builders'
+      ];
+      const builderSlug = formData.slug.split('/')[0]?.toLowerCase();
+      if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
+        return NextResponse.json(
+          { error: 'The builder slug/name cannot be a reserved word (e.g. contact, about, api...)' },
+          { status: 400 }
+        );
+      }
+
       // Check slug
       const existingSlug = await prisma.microsite.findUnique({ where: { slug: formData.slug } });
       if (existingSlug) {
