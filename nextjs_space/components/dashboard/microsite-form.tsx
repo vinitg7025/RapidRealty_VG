@@ -46,7 +46,10 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
   const [autoSaving, setAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [micrositeId, setMicrositeId] = useState<string | null>(initialData?.id ?? null);
+  const [micrositeId, setMicrositeId] = useState<string>(() => {
+    return initialData?.id ?? `c${Math.random().toString(36).substring(2, 15)}`;
+  });
+  const [isPersisted, setIsPersisted] = useState(!!initialData?.id);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [extracting, setExtracting] = useState(false);
   const brochureInputRef = useRef<HTMLInputElement>(null);
@@ -108,7 +111,7 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
   });
 
   // Auto-save logic
-  const performAutoSave = useCallback(async (currentForm: any, currentId: string | null) => {
+  const performAutoSave = useCallback(async (currentForm: any, currentId: string) => {
     if (!(currentForm?.projectName ?? '').trim() || !(currentForm?.slug ?? '').trim()) return;
     setAutoSaving(true);
     try {
@@ -120,8 +123,8 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
       });
       const data = await res.json();
       if (res.ok) {
-        if (data.isNew && data.microsite?.id) {
-          setMicrositeId(data.microsite.id);
+        if (data.isNew) {
+          setIsPersisted(true);
         }
         const now = new Date();
         setLastSaved(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }));
@@ -172,8 +175,8 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
       });
       const data = await res.json();
       if (res.ok) {
-        if (data.isNew && data.microsite?.id) {
-          setMicrositeId(data.microsite.id);
+        if (data.isNew) {
+          setIsPersisted(true);
         }
         const now = new Date();
         setLastSaved(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }));
@@ -300,9 +303,9 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
 
     setSaving(true);
     try {
-      const payload = { ...form, status };
-      const url = (isEdit || micrositeId) ? `/api/microsites/${initialData?.id ?? micrositeId}` : '/api/microsites';
-      const method = (isEdit || micrositeId) ? 'PUT' : 'POST';
+      const payload = { ...form, id: micrositeId, status };
+      const url = (isEdit || isPersisted) ? `/api/microsites/${initialData?.id ?? micrositeId}` : '/api/microsites';
+      const method = (isEdit || isPersisted) ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
         method,
@@ -727,11 +730,11 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
         {/* Tab 4: Uploads */}
         {activeTab === 4 && (
           <div className="space-y-6">
-            <FileUpload label="Hero Images" accept="image/*" multiple value={form?.heroImages ?? []} onChange={(v) => updateField('heroImages', v)} hint="Main banner images for the project" />
-            <FileUpload label="Gallery Images" accept="image/*" multiple value={form?.galleryImages ?? []} onChange={(v) => updateField('galleryImages', v)} hint="Additional project images" />
-            <FileUpload label="Master Plan" accept="image/*" value={form?.masterPlanImage ?? ''} onChange={(v) => updateField('masterPlanImage', v)} />
-            <FileUpload label="Builder Logo" accept="image/*" value={form?.builderLogoPath ?? ''} onChange={(v) => updateField('builderLogoPath', v)} />
-            <FileUpload label="Brochure (PDF)" accept=".pdf" value={form?.brochurePath ?? ''} onChange={(v) => updateField('brochurePath', v)} />
+            <FileUpload label="Hero Images" accept="image/*" multiple value={form?.heroImages ?? []} onChange={(v) => updateField('heroImages', v)} hint="Main banner images for the project" projectId={micrositeId} />
+            <FileUpload label="Gallery Images" accept="image/*" multiple value={form?.galleryImages ?? []} onChange={(v) => updateField('galleryImages', v)} hint="Additional project images" projectId={micrositeId} />
+            <FileUpload label="Master Plan" accept="image/*" value={form?.masterPlanImage ?? ''} onChange={(v) => updateField('masterPlanImage', v)} projectId={micrositeId} />
+            <FileUpload label="Builder Logo" accept="image/*" value={form?.builderLogoPath ?? ''} onChange={(v) => updateField('builderLogoPath', v)} projectId={micrositeId} />
+            <FileUpload label="Brochure (PDF)" accept=".pdf" value={form?.brochurePath ?? ''} onChange={(v) => updateField('brochurePath', v)} projectId={micrositeId} />
           </div>
         )}
 
@@ -826,6 +829,7 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
                       updateField('reraQrCodes', list);
                     }}
                     hint="Upload the RERA QR code image"
+                    projectId={micrositeId}
                   />
                 </div>
               ))}

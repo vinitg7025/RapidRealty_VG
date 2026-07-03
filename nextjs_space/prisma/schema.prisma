@@ -114,6 +114,7 @@ model Microsite {
   reraQrCodes     String          @db.Text @default("[]")
 
   leads           Lead[]
+  fileMetadata    FileMetadata[]
 
   @@index([status])
   @@index([createdById])
@@ -139,5 +140,18 @@ model SlugRedirect {
   oldSlug   String   @unique
   newSlug   String
   createdAt DateTime @default(now())
+}
+
+model FileMetadata {
+  id          String    @id @default(cuid())
+  fileName    String
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  projectId   String
+  project     Microsite @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploadedAt  DateTime  @default(now())
+
+  @@index([projectId])
 }
 

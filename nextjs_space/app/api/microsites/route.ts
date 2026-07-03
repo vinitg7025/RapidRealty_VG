@@ -79,6 +79,7 @@ export async function POST(request: Request) {
 
     const microsite = await prisma.microsite.create({
       data: {
+        id: body.id,
         slug: body.slug,
         status: body.status ?? 'DRAFT',
         createdById: userId,

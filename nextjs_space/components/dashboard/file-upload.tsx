@@ -12,9 +12,10 @@ interface FileUploadProps {
   value: string | string[];
   onChange: (value: string | string[]) => void;
   hint?: string;
+  projectId?: string;
 }
 
-export default function FileUpload({ label, accept, multiple, value, onChange, hint }: FileUploadProps) {
+export default function FileUpload({ label, accept, multiple, value, onChange, hint, projectId }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -24,7 +25,7 @@ export default function FileUpload({ label, accept, multiple, value, onChange, h
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
-      const uploadPromises = Array.from(files).map((file: File) => uploadFileToS3(file, true));
+      const uploadPromises = Array.from(files).map((file: File) => uploadFileToS3(file, true, projectId));
       const paths = await Promise.all(uploadPromises);
 
       if (multiple) {
