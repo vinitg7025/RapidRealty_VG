@@ -50,7 +50,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         }
 
         return {
-          allowedContentTypes: ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'],
+          allowedContentTypes: ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
           tokenPayload: clientPayload, // Forward to onUploadCompleted
         };
       },
