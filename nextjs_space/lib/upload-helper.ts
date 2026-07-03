@@ -36,11 +36,19 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
       body: formData,
     });
 
-    const data = await res.json();
-
     if (!res.ok) {
-      throw new Error(data.error || 'Server-side upload failed');
+      const errorText = await res.text();
+      let errorMessage = 'Server-side upload failed';
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorMessage;
+      } catch {
+        errorMessage = errorText || `HTTP error ${res.status}`;
+      }
+      throw new Error(errorMessage);
     }
+
+    const data = await res.json();
 
     console.log('[Client Upload] server-side upload completed. URL:', data.fileUrl);
     return data.fileUrl;
