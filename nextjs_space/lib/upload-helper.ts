@@ -1,3 +1,5 @@
+import { upload } from '@vercel/blob/client';
+
 export async function uploadFileToS3(file: File, isPublic: boolean = true, projectId?: string): Promise<string> {
   // 1. Client-side validation: unsupported file type
   const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -13,47 +15,25 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
     throw new Error(`File is too large (${(file.size / (1024 * 1024)).toFixed(2)} MB). Max limit is 50 MB.`);
   }
 
-  // 3. Helper function to sanitize name locally for logging & fallback
-  const parts = file.name.split('.');
-  const ext = parts.pop() || '';
-  const base = parts.join('.');
-  const cleanBase = base
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-  const sanitizedName = `${cleanBase || 'file'}-${Date.now()}.${ext}`;
-
   try {
-    console.log(`[Client Upload] starting server-side upload for: ${sanitizedName} (size: ${(file.size / (1024 * 1024)).toFixed(2)} MB, project: ${projectId})`);
+    console.log(`[Client Upload] starting Vercel Blob client upload for: ${file.name} (size: ${(file.size / (1024 * 1024)).toFixed(2)} MB, project: ${projectId})`);
 
-    // 4. Perform server-side upload using FormData
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('projectId', projectId ?? '');
-
-    const res = await fetch('/api/upload/server', {
-      method: 'POST',
-      body: formData,
+    // 3. Try Vercel Blob direct client upload
+    const blob = await upload(file.name, file, {
+      access: 'public',
+      handleUploadUrl: '/api/upload/vercel-blob',
+      clientPayload: JSON.stringify({
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        projectId: projectId ?? '',
+      }),
     });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      let errorMessage = 'Server-side upload failed';
-      try {
-        const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorMessage;
-      } catch {
-        errorMessage = errorText || `HTTP error ${res.status}`;
-      }
-      throw new Error(errorMessage);
-    }
-
-    const data = await res.json();
-
-    console.log('[Client Upload] server-side upload completed. URL:', data.fileUrl);
-    return data.fileUrl;
+    console.log('[Client Upload] Vercel Blob upload completed. URL:', blob.url);
+    return blob.url;
   } catch (error: any) {
-    console.warn('[Client Upload] Server-side upload failed, checking local development fallback...', error.message || error);
+    console.warn('[Client Upload] Vercel Blob upload failed, checking local development fallback...', error.message || error);
     
     // Check if we are running locally on localhost
     const isLocalhost = typeof window !== 'undefined' && 
@@ -61,12 +41,12 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
 
     if (isLocalhost) {
       console.log('[Client Upload] Localhost environment detected. Falling back to local disk storage.');
-      const localPath = `local-uploads/${sanitizedName}`;
+      const localPath = `local-uploads/${Date.now()}-${file.name}`;
       
       // Pass file details and projectId to store metadata locally too
       const localUploadUrl = `/api/upload/local?path=${encodeURIComponent(localPath)}` +
         `&projectId=${encodeURIComponent(projectId ?? '')}` +
-        `&fileName=${encodeURIComponent(sanitizedName)}` +
+        `&fileName=${encodeURIComponent(file.name)}` +
         `&fileType=${encodeURIComponent(file.type)}` +
         `&fileSize=${file.size}`;
       
@@ -85,7 +65,7 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
       return resolvedUrl;
     }
 
-    // If not on localhost, throw the original error
+    // If not on localhost, throw the original Vercel Blob error
     throw error;
   }
 }
