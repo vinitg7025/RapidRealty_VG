@@ -1,5 +1,19 @@
 import { upload } from '@vercel/blob/client';
 
+function sanitizeFilename(originalName: string): string {
+  const parts = originalName.split('.');
+  const ext = parts.pop() || '';
+  const base = parts.join('.');
+  
+  // Clean base name: lowercase, replace spaces and special characters with hyphens
+  const cleanBase = base
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+    
+  return `${cleanBase || 'file'}-${Date.now()}.${ext}`;
+}
+
 export async function uploadFileToS3(file: File, isPublic: boolean = true, projectId?: string): Promise<string> {
   // 1. Client-side validation: unsupported file type
   const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -15,15 +29,17 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
     throw new Error(`File is too large (${(file.size / (1024 * 1024)).toFixed(2)} MB). Max limit is 50 MB.`);
   }
 
+  const sanitizedName = sanitizeFilename(file.name);
+
   try {
-    console.log(`[Client Upload] starting Vercel Blob client upload for: ${file.name} (size: ${(file.size / (1024 * 1024)).toFixed(2)} MB, project: ${projectId})`);
+    console.log(`[Client Upload] starting Vercel Blob client upload for: ${sanitizedName} (size: ${(file.size / (1024 * 1024)).toFixed(2)} MB, project: ${projectId})`);
 
     // 3. Try Vercel Blob direct client upload
-    const blob = await upload(file.name, file, {
+    const blob = await upload(sanitizedName, file, {
       access: 'public',
       handleUploadUrl: '/api/upload/vercel-blob',
       clientPayload: JSON.stringify({
-        fileName: file.name,
+        fileName: sanitizedName,
         fileType: file.type,
         fileSize: file.size,
         projectId: projectId ?? '',
@@ -41,12 +57,12 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
 
     if (isLocalhost) {
       console.log('[Client Upload] Localhost environment detected. Falling back to local disk storage.');
-      const localPath = `local-uploads/${Date.now()}-${file.name}`;
+      const localPath = `local-uploads/${sanitizedName}`;
       
       // Pass file details and projectId to store metadata locally too
       const localUploadUrl = `/api/upload/local?path=${encodeURIComponent(localPath)}` +
         `&projectId=${encodeURIComponent(projectId ?? '')}` +
-        `&fileName=${encodeURIComponent(file.name)}` +
+        `&fileName=${encodeURIComponent(sanitizedName)}` +
         `&fileType=${encodeURIComponent(file.type)}` +
         `&fileSize=${file.size}`;
       
