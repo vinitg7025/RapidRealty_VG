@@ -114,7 +114,6 @@ model Microsite {
   reraQrCodes     String          @db.Text @default("[]")
 
   leads           Lead[]
-  fileMetadata    FileMetadata[]
 
   @@index([status])
   @@index([createdById])
@@ -149,7 +148,6 @@ model FileMetadata {
   fileType    String
   fileSize    Int
   projectId   String
-  project     Microsite @relation(fields: [projectId], references: [id], onDelete: Cascade)
   uploadedAt  DateTime  @default(now())
 
   @@index([projectId])
