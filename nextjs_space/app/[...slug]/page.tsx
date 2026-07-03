@@ -5,21 +5,28 @@ import { notFound, redirect } from 'next/navigation';
 // Reserve known paths
 const RESERVED_SLUGS = ['dashboard', 'auth', 'api', '_next', 'favicon.ico'];
 
-export default async function MicrositePage({ params }: { params: { slug: string[] } }) {
+export default async function MicrositePage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string[] };
+  searchParams: { preview?: string };
+}) {
   const slugParts = params?.slug ?? [];
   const fullSlug = slugParts.join('/');
+  const isPreview = searchParams?.preview === 'true';
 
   if (!fullSlug || RESERVED_SLUGS.includes(slugParts[0])) {
     notFound();
   }
 
-  // Check if microsite exists and is published
+  // Check if microsite exists and is published (or is being previewed)
   const microsite = await prisma.microsite.findUnique({
     where: { slug: fullSlug },
     select: { id: true, status: true, projectName: true },
   });
 
-  if (!microsite || microsite.status !== 'PUBLISHED') {
+  if (!microsite || (microsite.status !== 'PUBLISHED' && !isPreview)) {
     const redirectRecord = await prisma.slugRedirect.findUnique({
       where: { oldSlug: fullSlug },
     });

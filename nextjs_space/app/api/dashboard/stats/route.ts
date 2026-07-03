@@ -14,16 +14,17 @@ export async function GET() {
     const role = (session.user as any).role;
     const where = role === 'ADMIN' ? {} : { createdById: userId };
 
-    const [microsites, published, drafts, leads] = await Promise.all([
+    const [microsites, published, drafts, archived, leads] = await Promise.all([
       prisma.microsite.count({ where }),
       prisma.microsite.count({ where: { ...where, status: 'PUBLISHED' } }),
       prisma.microsite.count({ where: { ...where, status: 'DRAFT' } }),
+      prisma.microsite.count({ where: { ...where, status: 'ARCHIVED' } }),
       prisma.lead.count({
         where: role === 'ADMIN' ? {} : { microsite: { createdById: userId } },
       }),
     ]);
 
-    return NextResponse.json({ microsites, published, drafts, leads });
+    return NextResponse.json({ microsites, published, drafts, archived, leads });
   } catch (error: any) {
     console.error('Stats error:', error);
     return NextResponse.json({ error: 'Failed' }, { status: 500 });

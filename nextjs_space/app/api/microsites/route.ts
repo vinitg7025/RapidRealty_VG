@@ -5,6 +5,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+import { getFileUrl } from '@/lib/s3';
+
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,7 +22,25 @@ export async function GET(request: Request) {
       include: { createdBy: { select: { name: true, email: true } }, _count: { select: { leads: true } } },
     });
 
-    return NextResponse.json({ microsites });
+    const resolvedMicrosites = await Promise.all(
+      microsites.map(async (m) => {
+        let thumbnailUrl = '';
+        try {
+          const heroImages = JSON.parse(m.heroImages || '[]');
+          if (Array.isArray(heroImages) && heroImages.length > 0 && heroImages[0]) {
+            thumbnailUrl = await getFileUrl(heroImages[0], 'image/jpeg', true);
+          }
+        } catch (e) {
+          // ignore
+        }
+        return {
+          ...m,
+          thumbnailUrl,
+        };
+      })
+    );
+
+    return NextResponse.json({ microsites: resolvedMicrosites });
   } catch (error: any) {
     console.error(error);
     return NextResponse.json({ error: 'Failed' }, { status: 500 });

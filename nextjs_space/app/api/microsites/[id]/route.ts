@@ -122,3 +122,47 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
   }
 }
+
+export async function POST(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const userId = (session.user as any).id;
+    const role = (session.user as any).role;
+
+    const existing = await prisma.microsite.findUnique({ where: { id: params.id } });
+    if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (role !== 'ADMIN' && existing.createdById !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Generate a unique slug
+    let baseSlug = existing.slug;
+    let newSlug = `${baseSlug}-copy`;
+    let counter = 1;
+    while (true) {
+      const slugExists = await prisma.microsite.findUnique({ where: { slug: newSlug } });
+      if (!slugExists) break;
+      newSlug = `${baseSlug}-copy-${counter}`;
+      counter++;
+    }
+
+    const { id, slug, status, createdById, createdAt, updatedAt, ...rest } = existing;
+
+    const duplicated = await prisma.microsite.create({
+      data: {
+        ...rest,
+        slug: newSlug,
+        status: 'DRAFT',
+        createdById: userId,
+        projectName: `${existing.projectName} (Copy)`,
+      },
+    });
+
+    return NextResponse.json({ success: true, microsite: duplicated });
+  } catch (error: any) {
+    console.error('Failed to duplicate:', error);
+    return NextResponse.json({ error: 'Failed to duplicate' }, { status: 500 });
+  }
+}

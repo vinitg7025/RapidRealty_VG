@@ -6,12 +6,14 @@ import { getFileUrl } from '@/lib/s3';
 
 export async function GET(request: Request, { params }: { params: { slug: string[] } }) {
   try {
+    const { searchParams } = new URL(request.url);
+    const isPreview = searchParams.get('preview') === 'true';
     const fullSlug = (params?.slug ?? []).join('/');
     const microsite = await prisma.microsite.findUnique({
       where: { slug: fullSlug },
     });
 
-    if (!microsite || microsite.status !== 'PUBLISHED') {
+    if (!microsite || (microsite.status !== 'PUBLISHED' && !isPreview)) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
