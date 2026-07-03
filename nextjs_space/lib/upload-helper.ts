@@ -18,7 +18,7 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
   try {
     console.log(`[Client Upload] starting Vercel Blob client upload for: ${file.name} (size: ${(file.size / (1024 * 1024)).toFixed(2)} MB, project: ${projectId})`);
 
-    // 3. Perform client-side upload directly to Vercel Blob via handleUpload endpoint token
+    // 3. Try Vercel Blob direct client upload
     const blob = await upload(file.name, file, {
       access: 'public',
       handleUploadUrl: '/api/upload/vercel-blob',
@@ -30,11 +30,43 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
       }),
     });
 
-    console.log('[Client Upload] upload completed successfully. Blob URL:', blob.url);
+    console.log('[Client Upload] Vercel Blob upload completed. URL:', blob.url);
     return blob.url;
   } catch (error: any) {
-    console.error('[Client Upload] blob upload failure error:', error.message || error);
-    throw new Error(error.message || 'File upload failed');
+    console.warn('[Client Upload] Vercel Blob upload failed, checking local development fallback...', error.message || error);
+    
+    // Check if we are running locally on localhost
+    const isLocalhost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    if (isLocalhost) {
+      console.log('[Client Upload] Localhost environment detected. Falling back to local disk storage.');
+      const localPath = `local-uploads/${Date.now()}-${file.name}`;
+      
+      // Pass file details and projectId to store metadata locally too
+      const localUploadUrl = `/api/upload/local?path=${encodeURIComponent(localPath)}` +
+        `&projectId=${encodeURIComponent(projectId ?? '')}` +
+        `&fileName=${encodeURIComponent(file.name)}` +
+        `&fileType=${encodeURIComponent(file.type)}` +
+        `&fileSize=${file.size}`;
+      
+      const uploadRes = await fetch(localUploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+      
+      if (!uploadRes.ok) {
+        throw new Error('Local upload fallback failed. Make sure the local server is running.');
+      }
+      
+      const resolvedUrl = `/${localPath}`;
+      console.log('[Client Upload] local fallback upload completed. URL:', resolvedUrl);
+      return resolvedUrl;
+    }
+
+    // If not on localhost, throw the original Vercel Blob error
+    throw error;
   }
 }
 
