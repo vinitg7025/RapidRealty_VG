@@ -1,9 +1,8 @@
 import { generateClientTokenFromReadWriteToken } from '@vercel/blob/client';
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-export async function POST(request: Request): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // 1. Verify BLOB_READ_WRITE_TOKEN exists
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
@@ -11,9 +10,9 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: 'Storage token is missing on server. Check Vercel environment configuration.' }, { status: 500 });
     }
 
-    // Authenticate user session
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    // Authenticate user session using cookies (bypasses NEXTAUTH_URL network calls)
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
       console.error('[Vercel Blob Server] unauthorized attempt to request client token');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
