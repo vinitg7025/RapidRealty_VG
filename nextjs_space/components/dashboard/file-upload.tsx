@@ -36,7 +36,8 @@ export default function FileUpload({ label, accept, multiple, value, onChange, h
       toast.success(`${paths.length} file(s) uploaded`);
     } catch (err: any) {
       console.error('File upload error:', err);
-      toast.error(err.message || 'Upload failed');
+      const errMsg = err instanceof Error ? err.message : (typeof err === 'string' ? err : JSON.stringify(err));
+      toast.error(errMsg || 'Upload failed');
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
