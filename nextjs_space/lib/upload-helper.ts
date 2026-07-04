@@ -1,4 +1,4 @@
-import { upload } from '@vercel/blob/client';
+import { put } from '@vercel/blob/client';
 
 export async function uploadFileToS3(file: File, isPublic: boolean = true, projectId?: string): Promise<string> {
   // 1. Client-side validation: unsupported file type
@@ -16,21 +16,55 @@ export async function uploadFileToS3(file: File, isPublic: boolean = true, proje
   }
 
   try {
-    console.log(`[Client Upload] starting Vercel Blob client upload for: ${file.name} (size: ${(file.size / (1024 * 1024)).toFixed(2)} MB, project: ${projectId})`);
+    console.log(`[Client Upload] requesting Vercel Blob client token for: ${file.name}`);
 
-    // 3. Try Vercel Blob direct client upload
-    const blob = await upload(file.name, file, {
+    // 3. Fetch scoped client upload token from the server
+    const tokenRes = await fetch('/api/upload/vercel-blob', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pathname: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+      }),
+    });
+
+    if (!tokenRes.ok) {
+      const errData = await tokenRes.json();
+      throw new Error(errData.error || 'Failed to generate upload token');
+    }
+
+    const { clientToken } = await tokenRes.json();
+
+    // 4. Perform client-side upload directly to Vercel Blob using the token (no callback URL)
+    console.log('[Client Upload] starting direct upload to Vercel Blob...');
+    const blob = await put(file.name, file, {
       access: 'public',
-      handleUploadUrl: '/api/upload/vercel-blob',
-      clientPayload: JSON.stringify({
+      token: clientToken,
+    });
+
+    console.log('[Client Upload] Vercel Blob upload completed. URL:', blob.url);
+
+    // 5. Store file metadata in the Neon database
+    console.log('[Client Upload] storing file metadata in Neon database...');
+    const metadataRes = await fetch('/api/upload/metadata', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         fileName: file.name,
+        fileUrl: blob.url,
         fileType: file.type,
         fileSize: file.size,
         projectId: projectId ?? '',
       }),
     });
 
-    console.log('[Client Upload] Vercel Blob upload completed. URL:', blob.url);
+    if (!metadataRes.ok) {
+      console.warn('[Client Upload] Warning: failed to save metadata to Neon database after successful upload.');
+    } else {
+      console.log('[Client Upload] metadata successfully stored in Neon database');
+    }
+
     return blob.url;
   } catch (error: any) {
     console.warn('[Client Upload] Vercel Blob upload failed, checking local development fallback...', error.message || error);
