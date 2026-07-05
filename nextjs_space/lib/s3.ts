@@ -10,7 +10,7 @@ function shouldServeInline(contentType: string): boolean {
 
 export async function generatePresignedUploadUrl(fileName: string, contentType: string, isPublic: boolean = false) {
   const hasAwsCreds = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
-  const hasVercelBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+  const hasVercelBlob = !!(process.env.PUBLIC_BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN);
 
   if (!hasAwsCreds && hasVercelBlob) {
     const cloud_storage_path = `uploads/${Date.now()}-${fileName}`;

@@ -2,10 +2,14 @@ import { generateClientTokenFromReadWriteToken } from '@vercel/blob/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
+// Read the Blob RW token, supporting a custom "PUBLIC_BLOB" prefix so a fresh
+// public store can be connected without colliding with leftover BLOB_* vars.
+const BLOB_TOKEN = process.env.PUBLIC_BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN;
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // 1. Verify BLOB_READ_WRITE_TOKEN exists
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    // 1. Verify a Blob RW token exists
+    if (!BLOB_TOKEN) {
       console.error('[Vercel Blob Server] missing token: BLOB_READ_WRITE_TOKEN is not configured');
       return NextResponse.json({ error: 'Storage token is missing on server. Check Vercel environment configuration.' }, { status: 500 });
     }
@@ -43,7 +47,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const validUntil = Date.now() + 60 * 60 * 1000; // 1 hour in ms
     
     const clientToken = await generateClientTokenFromReadWriteToken({
-      token: process.env.BLOB_READ_WRITE_TOKEN,
+      token: BLOB_TOKEN,
       pathname,
       addRandomSuffix: true,
       validUntil,

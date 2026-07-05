@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      hasVercelBlobToken: !!process.env.BLOB_READ_WRITE_TOKEN,
+      hasVercelBlobToken: !!(process.env.PUBLIC_BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN),
       hasAwsAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
       hasAwsSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
       nodeEnv: process.env.NODE_ENV || 'undefined',
