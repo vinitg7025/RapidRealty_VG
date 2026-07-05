@@ -38,13 +38,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: `File is too large (${(fileSize / (1024 * 1024)).toFixed(2)} MB). Max limit is 50 MB.` }, { status: 400 });
     }
 
-    // 4. Generate scoped client token with explicit 24-hour expiration duration
+    // 4. Generate scoped client token with explicit 1-hour expiration duration
     console.log(`[Vercel Blob Server] generating upload token for pathname: ${pathname}`);
-    const validUntil = Date.now() + 24 * 60 * 60 * 1000; // 24 hours in ms
+    const validUntil = Date.now() + 60 * 60 * 1000; // 1 hour in ms
     
     const clientToken = await generateClientTokenFromReadWriteToken({
       token: process.env.BLOB_READ_WRITE_TOKEN,
       pathname,
+      addRandomSuffix: true,
       validUntil,
     });
 
