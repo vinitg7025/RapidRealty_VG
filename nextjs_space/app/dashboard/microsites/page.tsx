@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 
   PlusCircle, Search, Loader2, FileText, MoreVertical, Copy, ExternalLink, 
@@ -590,7 +591,7 @@ export default function MicrositesPage() {
                     <TableCell className="py-1 px-4 font-medium text-white max-w-[240px] truncate">
                       <div className="flex items-center gap-3">
                         {m.thumbnailUrl ? (
-                          <img src={m.thumbnailUrl} alt={m.projectName} className="w-10 h-10 object-cover rounded-lg border border-white/10" />
+                          <Image src={m.thumbnailUrl} alt={m.projectName} width={40} height={40} className="w-10 h-10 object-cover rounded-lg border border-white/10" />
                         ) : (
                           <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center text-white/30">
                             <Building2 className="w-5 h-5 text-[#c8a45e]/80" />

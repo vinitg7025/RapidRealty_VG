@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface MicrositeViewProps {
   slug: string;
@@ -277,7 +278,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
   });
 
   return (
-    <div className="min-h-screen bg-[#121212] font-sans antialiased text-[#a3a3a3]">
+    <div className="min-h-screen bg-[#121212] font-sans antialiased text-[#a3a3a3] pb-20 md:pb-0">
       {/* Sticky Header & Nav Wrapper */}
       <div className="sticky top-0 z-50 bg-[#121212]">
         {/* Header */}
@@ -364,10 +365,13 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
             {allImages.length > 0 && (
               <div className="space-y-3">
                 <div className="relative rounded overflow-hidden bg-[#1a1a1a] aspect-[16/9] border border-[#4a4a4a]/10">
-                  <img
+                  <Image
                     src={allImages[heroIndex % allImages.length] ?? ''}
                     alt={`${data?.projectName ?? ''} image`}
-                    className="w-full h-full object-cover cursor-zoom-in hover:opacity-95 transition-opacity duration-300"
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 66vw"
+                    className="object-cover cursor-zoom-in hover:opacity-95 transition-opacity duration-300"
                     onClick={() => setLightboxImage(allImages[heroIndex % allImages.length])}
                   />
                   {allImages.length > 1 && (
@@ -396,7 +400,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                         className={`w-24 h-16 rounded overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${
                           i === heroIndex % allImages.length ? 'border-[#f59e0b] opacity-100 scale-[0.98]' : 'border-transparent opacity-50 hover:opacity-80'
                         }`}>
-                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        <Image src={url} alt="" width={96} height={64} className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
@@ -490,7 +494,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                   Project <span className="italic text-[#a3a3a3]/90">Master Plan</span>
                 </h2>
                 <div className="rounded overflow-hidden bg-[#1a1a1a] border border-[#4a4a4a]/10 p-4 max-w-3xl flex flex-col items-center gap-2">
-                  <img src={data.masterPlanUrl} alt="Master Plan" className="w-full object-contain max-h-[500px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(data.masterPlanUrl)} />
+                  <Image src={data.masterPlanUrl} alt="Master Plan" width={1600} height={1000} sizes="(max-width: 768px) 100vw, 768px" className="w-full h-auto object-contain max-h-[500px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(data.masterPlanUrl)} />
                   <p className="text-[10px] text-amber-500 font-mono tracking-wider uppercase select-none mt-1">Click to enlarge</p>
                 </div>
               </section>
@@ -606,10 +610,13 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
 
                         {hasFloorPlanImg && (
                           <div className="md:w-1/2 flex flex-col items-center justify-center bg-black/20 rounded p-4 border border-[#4a4a4a]/10 gap-2">
-                            <img
+                            <Image
                               src={activeConfig.floorPlanImageUrl}
                               alt={`${activeConfig.config} Floor Plan`}
-                              className="w-full object-contain max-h-[300px] cursor-zoom-in hover:opacity-95 transition-opacity duration-300"
+                              width={1200}
+                              height={900}
+                              sizes="(max-width: 768px) 100vw, 384px"
+                              className="w-full h-auto object-contain max-h-[300px] cursor-zoom-in hover:opacity-95 transition-opacity duration-300"
                               onClick={() => setLightboxImage(activeConfig.floorPlanImageUrl)}
                             />
                             <p className="text-[10px] text-amber-500 font-mono tracking-wider uppercase select-none mt-1">Click to enlarge</p>
@@ -636,7 +643,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
                   {floorPlanUrls.filter(Boolean).map((url: string, i: number) => (
                     <div key={i} className="rounded overflow-hidden bg-[#1a1a1a] border border-[#4a4a4a]/10 p-4 flex flex-col items-center gap-2">
-                      <img src={url} alt={`Floor Plan ${i + 1}`} className="w-full object-contain max-h-[350px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(url)} />
+                      <Image src={url} alt={`Floor Plan ${i + 1}`} width={1200} height={900} sizes="(max-width: 768px) 100vw, 384px" className="w-full h-auto object-contain max-h-[350px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(url)} />
                       <p className="text-[10px] text-amber-500 font-mono tracking-wider uppercase select-none mt-1">Click to enlarge</p>
                     </div>
                   ))}
@@ -660,7 +667,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                     <div className="space-y-6">
                       <div className="flex items-start gap-4 pb-3 border-b border-[#4a4a4a]/10">
                         {data?.builderLogoUrl && (
-                          <img src={data.builderLogoUrl} alt="" className="w-16 h-16 object-contain rounded bg-[#121212] p-1 flex-shrink-0 cursor-zoom-in hover:opacity-90 transition-opacity duration-300" onClick={() => setLightboxImage(data.builderLogoUrl)} />
+                          <Image src={data.builderLogoUrl} alt="" width={64} height={64} className="w-16 h-16 object-contain rounded bg-[#121212] p-1 flex-shrink-0 cursor-zoom-in hover:opacity-90 transition-opacity duration-300" onClick={() => setLightboxImage(data.builderLogoUrl)} />
                         )}
                         <div className="space-y-1.5 flex-1 pt-1">
                           <h3 className="font-serif text-2xl text-white font-normal leading-none">{data?.builderName ?? ''}</h3>
@@ -747,7 +754,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                         {reraQrCodes.filter((r: any) => r?.qrImageUrl).map((r: any, i: number) => (
                           <div key={i} className="flex items-center gap-4 bg-[#121212]/40 border border-[#4a4a4a]/10 rounded-lg p-4">
                             <div className="w-20 h-20 flex-shrink-0 bg-white rounded p-1">
-                              <img src={r.qrImageUrl} alt="" className="w-full h-full object-contain cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(r.qrImageUrl)} />
+                              <Image src={r.qrImageUrl} alt="" width={80} height={80} className="w-full h-full object-contain cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(r.qrImageUrl)} />
                             </div>
                             <div className="space-y-1">
                               {r?.towerName && (
@@ -835,7 +842,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
           </div>
 
           {/* Sticky Inquiry Form */}
-          <div className="w-full lg:w-[360px] max-w-[640px] lg:max-w-none mx-auto lg:mx-0 flex-shrink-0">
+          <div id="enquire" className="w-full lg:w-[360px] max-w-[640px] lg:max-w-none mx-auto lg:mx-0 flex-shrink-0 scroll-mt-24">
             <div className="lg:sticky lg:top-[148px] transition-all duration-300">
               <div className="bg-gradient-to-b from-[#1A1A1A] to-[#0D0D0D] border border-amber-500/20 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-5 space-y-4 transition-all duration-300">
                 <div className="text-center">
@@ -1046,6 +1053,22 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
           </div>
         </div>
       )}
+
+      {/* Mobile sticky action bar (Call + Enquire) — hidden on desktop */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-[90] flex items-stretch gap-2 p-3 bg-[#121212]/95 backdrop-blur border-t border-white/10">
+        <a
+          href="tel:+918454989005"
+          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border border-amber-500/40 text-amber-500 text-xs font-semibold uppercase tracking-widest"
+        >
+          <Phone className="w-4 h-4" /> Call
+        </a>
+        <a
+          href="#enquire"
+          className="flex-[1.4] flex items-center justify-center gap-2 py-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-[#0A0A0A] text-xs font-bold uppercase tracking-widest"
+        >
+          Enquire Now
+        </a>
+      </div>
     </div>
   );
 }

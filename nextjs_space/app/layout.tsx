@@ -29,9 +29,6 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script src="https://apps.abacus.ai/chatllm/appllm-lib.js"></script>
-      </head>
       <body className={`${inter.variable} ${playfair.variable} ${jetbrainsMono.variable} font-sans`}>
         <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>

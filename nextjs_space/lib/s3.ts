@@ -52,8 +52,8 @@ export async function getFileUrl(cloud_storage_path: string, contentType: string
     return cloud_storage_path;
   }
 
-  if (cloud_storage_path.startsWith('local-uploads/')) {
-    return `/${cloud_storage_path}`;
+  if (cloud_storage_path.startsWith('local-uploads/') || cloud_storage_path.startsWith('/local-uploads/')) {
+    return '/' + cloud_storage_path.replace(/^\/+/, '');
   }
 
   const hasAwsCreds = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;

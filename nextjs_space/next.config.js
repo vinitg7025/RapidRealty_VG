@@ -14,7 +14,16 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  images: { unoptimized: true },
+  images: {
+    // Keep unoptimized ONLY for local runs or static export; on Vercel this stays false so
+    // images are auto-resized to device size and served as WebP.
+    unoptimized: !process.env.VERCEL || process.env.NEXT_OUTPUT_MODE === 'export',
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.blob.vercel-storage.com' },
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'http', hostname: '**' },
+    ],
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.output.filename = 'static/chunks/[name]-[contenthash:8].js';
