@@ -150,7 +150,19 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
   const [activeFloorPlanTab, setActiveFloorPlanTab] = useState(0);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [activeFaqIndex, setActiveFaqIndex] = useState<number | null>(null);
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  useEffect(() => {
+    if (pdfViewerUrl) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [pdfViewerUrl]);
 
   useEffect(() => {
     fetch(`/api/microsites/public/${slug}`)
@@ -818,22 +830,28 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                   <div className="space-y-2">
                     <h3 className="font-serif text-xl text-white font-normal">Need more information?</h3>
                     <p className="text-sm text-[#a3a3a3]/85 font-light">
-                      Get the official builder brochure.
+                      Explore the official project presentation
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-[#4a4a4a]/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="pt-4 border-t border-[#4a4a4a]/10 flex flex-col sm:flex-row items-center gap-4">
+                    <button
+                      onClick={() => setPdfViewerUrl(data.brochureUrl)}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#f59e0b] hover:bg-[#d4890a] text-black px-6 py-3 rounded text-xs font-mono font-bold tracking-widest uppercase transition duration-300 cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span>View Brochure</span>
+                    </button>
                     <a
                       href={data.brochureUrl}
                       download
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-[#f59e0b] hover:bg-[#d4890a] text-black px-6 py-3 rounded text-xs font-mono font-bold tracking-widest uppercase transition duration-300 cursor-pointer"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-[#f59e0b]/40 hover:border-[#f59e0b] text-[#f59e0b] px-6 py-3 rounded text-xs font-mono font-bold tracking-widest uppercase transition duration-300 cursor-pointer"
                     >
                       <Download className="w-4 h-4" />
                       <span>Download Brochure</span>
                     </a>
-                    <span className="text-[10px] text-[#a3a3a3]/45 tracking-wider uppercase select-none">PDF Document • Clean Copy</span>
                   </div>
                 </div>
               </section>
@@ -1049,6 +1067,41 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
               src={lightboxImage}
               alt="Zoomed Preview"
               className="w-full h-auto max-h-[85vh] object-contain select-none"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* PDF Document Viewer Overlay */}
+      {pdfViewerUrl && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex flex-col animate-fade-in"
+          onClick={() => setPdfViewerUrl(null)}
+        >
+          {/* Header bar */}
+          <div className="flex items-center justify-between px-6 py-3 bg-[#0b0b0b] border-b border-white/5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <a href="https://www.11estates.in/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 group select-none">
+                <div className="w-4 h-4 border border-white flex items-center justify-center font-serif text-[9px] text-white group-hover:bg-white group-hover:text-[#121212] transition-colors">11</div>
+                <span className="font-serif text-[10px] tracking-wider uppercase text-white font-semibold">Estates</span>
+              </a>
+              <span className="text-[9px] text-white/50 border-l border-white/10 pl-3 select-none uppercase tracking-wider font-mono">
+                Viewing on 11 Estates
+              </span>
+            </div>
+            <button
+              onClick={() => setPdfViewerUrl(null)}
+              className="w-8 h-8 bg-white/10 hover:bg-white/20 transition-all rounded-full flex items-center justify-center text-white text-xs font-mono"
+            >
+              ✕
+            </button>
+          </div>
+          {/* PDF Viewer Frame */}
+          <div className="flex-1 w-full h-full bg-[#121212]" onClick={(e) => e.stopPropagation()}>
+            <iframe
+              src={`${pdfViewerUrl}#toolbar=1`}
+              className="w-full h-full border-0"
+              title="Brochure PDF Viewer"
             />
           </div>
         </div>
