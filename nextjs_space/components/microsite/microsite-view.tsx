@@ -39,6 +39,15 @@ function toSentenceCase(str: string) {
   return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
 }
 
+function toTitleCase(str: string) {
+  if (!str) return '';
+  return str
+    .trim()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 function getAmenityIcon(name: string) {
   const t = name.toLowerCase();
   if (t.includes('pool') || t.includes('swim')) return <Waves className="w-4 h-4 text-amber-500/60 group-hover:text-amber-500 transition-colors" />;
@@ -533,10 +542,10 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                     <button
                       key={i}
                       onClick={() => setActiveFloorPlanTab(i)}
-                      className={`px-5 py-2 rounded text-xs font-mono uppercase tracking-wider transition-all duration-300 border ${
+                      className={`px-5 py-2 rounded text-sm font-mono font-semibold uppercase tracking-normal transition-all duration-300 border ${
                         activeFloorPlanTab === i
                           ? 'bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]'
-                          : 'bg-white/5 text-[#a3a3a3]/60 border-transparent hover:border-[#4a4a4a]/30'
+                          : 'bg-white/5 text-zinc-300 border-transparent hover:border-[#4a4a4a]/30'
                       }`}
                     >
                       {p.config}
@@ -582,13 +591,13 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                           <div className="grid grid-cols-2 gap-4 border-t border-[#4a4a4a]/10 pt-4">
                             {activeConfig.area && (
                               <div>
-                                <p className="text-[10px] uppercase tracking-wider text-[#a3a3a3]/40 mb-0.5">SBA / Area</p>
+                                <p className="text-[15px] font-medium text-[#A0A0A0] mb-0.5">SBA / Area</p>
                                 <p className="text-sm font-semibold text-white">{activeConfig.area} sq.ft.</p>
                               </div>
                             )}
                             {(activeConfig.customFields ?? []).filter((cf: any) => cf.key && cf.value).map((cf: any, idx: number) => (
                               <div key={idx}>
-                                <p className="text-[10px] uppercase tracking-wider text-[#a3a3a3]/40 mb-0.5">{cf.key}</p>
+                                <p className="text-[15px] font-medium text-[#A0A0A0] mb-0.5">{toTitleCase(cf.key)}</p>
                                 <p className="text-sm font-semibold text-white">{cf.value}</p>
                               </div>
                             ))}

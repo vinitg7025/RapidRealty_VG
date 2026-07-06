@@ -51,8 +51,6 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
   });
   const [isPersisted, setIsPersisted] = useState(!!initialData?.id);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [extracting, setExtracting] = useState(false);
-  const brochureInputRef = useRef<HTMLInputElement>(null);
 
   const parseJson = (val: any, fallback: any = []) => {
     if (!val) return fallback;
@@ -207,94 +205,7 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
     });
   };
 
-  // Brochure upload + AI extraction
-  const handleBrochureExtract = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const file = files[0];
-    if (file.type !== 'application/pdf') {
-      toast.error('Please upload a PDF brochure');
-      return;
-    }
-    setExtracting(true);
-    toast.info('Uploading brochure and extracting details with AI...');
-    try {
-      // Upload to S3 first
-      const cloudPath = await uploadFileToS3(file, true);
-      updateField('brochurePath', cloudPath);
 
-      // Convert to base64 for LLM extraction
-      const buffer = await file.arrayBuffer();
-      const base64 = btoa(
-        new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      );
-
-      const res = await fetch('/api/brochure/extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pdfBase64: base64, fileName: file.name }),
-      });
-
-      if (!res.ok) {
-        toast.error('Extraction failed. Brochure uploaded, but fields not auto-filled.');
-        return;
-      }
-
-      const extracted = await res.json();
-      
-      // Auto-fill form fields from extraction
-      setForm((prev: any) => {
-        const updated = { ...prev, brochurePath: cloudPath };
-        if (extracted.projectName && !prev.projectName) updated.projectName = extracted.projectName;
-        if (extracted.builderName && !prev.builderName) updated.builderName = extracted.builderName;
-        if (extracted.location && !prev.location) updated.location = extracted.location;
-        if (extracted.city && !prev.city) updated.city = extracted.city;
-        if (extracted.possessionDate && !prev.possessionDate) updated.possessionDate = extracted.possessionDate;
-        if (extracted.projectDescription && !prev.projectDescription) updated.projectDescription = extracted.projectDescription;
-        if (extracted.reraNumber && !prev.reraNumber) updated.reraNumber = extracted.reraNumber;
-        if (extracted.projectType && prev.projectType === 'Residential') updated.projectType = extracted.projectType;
-        if (extracted.priceRangeMin && !prev.priceRangeMin) updated.priceRangeMin = extracted.priceRangeMin;
-        if (extracted.priceRangeMax && !prev.priceRangeMax) updated.priceRangeMax = extracted.priceRangeMax;
-        if (extracted.builderDescription && !prev.builderDescription) updated.builderDescription = extracted.builderDescription;
-        if (extracted.builderExperience && !prev.builderExperience) updated.builderExperience = extracted.builderExperience;
-        if (extracted.builderProjects && !prev.builderProjects) updated.builderProjects = extracted.builderProjects;
-        
-        if (extracted.projectHighlights?.length > 0 && (!prev.projectHighlights || prev.projectHighlights.length === 0 || (prev.projectHighlights.length === 1 && !prev.projectHighlights[0]?.headline))) {
-          updated.projectHighlights = extracted.projectHighlights.map((item: any) => {
-            if (typeof item === 'string') {
-              return { headline: item, support: '' };
-            }
-            return { headline: item?.headline ?? '', support: item?.support ?? '' };
-          });
-        }
-        if (extracted.pricingData?.length > 0 && (!prev.pricingData || prev.pricingData.length === 0 || (prev.pricingData.length === 1 && !prev.pricingData[0]?.config))) {
-          updated.pricingData = extracted.pricingData.map((p: any) => ({ config: p.config ?? '', area: p.area ?? '', price: p.price ?? '', floorPlanImage: '' }));
-        }
-        if (extracted.connectivityData?.length > 0 && (!prev.connectivityData || prev.connectivityData.length === 0 || (prev.connectivityData.length === 1 && !prev.connectivityData[0]?.place))) {
-          updated.connectivityData = extracted.connectivityData;
-        }
-        if (extracted.amenities?.length > 0 && (!prev.amenities || prev.amenities.length === 0)) {
-          // Match against known amenities
-          const matched = extracted.amenities.filter((a: string) => AMENITY_OPTIONS.includes(a));
-          if (matched.length > 0) updated.amenities = matched;
-        }
-
-        // Auto-generate slug
-        if (updated.builderName && updated.projectName && !isEdit && !prev.slug) {
-          updated.slug = slugify(updated.builderName) + '/' + slugify(updated.projectName);
-        }
-
-        return updated;
-      });
-
-      toast.success('Brochure details extracted and auto-filled!');
-    } catch (err: any) {
-      console.error(err);
-      toast.error('Something went wrong during extraction');
-    } finally {
-      setExtracting(false);
-      if (brochureInputRef.current) brochureInputRef.current.value = '';
-    }
-  };
 
   const handleSubmit = async (status: string) => {
     if (!(form?.projectName ?? '').trim()) { toast.error('Project name is required'); return; }
@@ -363,33 +274,6 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
 
   return (
     <div>
-      {/* Brochure AI Extract Banner */}
-      <div className="mb-6 p-5 bg-gradient-to-r from-[#c8a45e]/10 to-[#c8a45e]/5 border border-[#c8a45e]/20 rounded-xl">
-        <div className="flex items-start gap-4">
-          <div className="w-10 h-10 bg-[#c8a45e]/20 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-5 h-5 text-[#c8a45e]" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-white mb-1">Auto-fill from Brochure</h3>
-            <p className="text-xs text-white/50 mb-3">Upload a project brochure PDF and our AI will extract details to auto-fill the form fields.</p>
-            <button
-              onClick={() => !extracting && brochureInputRef.current?.click()}
-              disabled={extracting}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#c8a45e] text-black rounded-lg text-sm font-semibold hover:bg-[#d4b06a] transition disabled:opacity-50"
-            >
-              {extracting ? <><Loader2 className="w-4 h-4 animate-spin" /> Extracting...</> : <><Upload className="w-4 h-4" /> Upload Brochure PDF</>}
-            </button>
-            <input
-              ref={brochureInputRef}
-              type="file"
-              accept=".pdf"
-              onChange={(e) => handleBrochureExtract(e.target.files)}
-              className="hidden"
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Tabs */}
       <div className="flex gap-1 mb-6 overflow-x-auto pb-2 scrollbar-none">
         {tabs.map((tab: any, i: number) => (
