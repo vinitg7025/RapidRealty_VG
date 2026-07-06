@@ -6,7 +6,7 @@ import {
   Download, Check, ArrowRight, HelpCircle, Shield, Star, Clock, Loader2, ChevronDown,
   Waves, Dumbbell, TreePine, Zap, Car, Eye, ShoppingBag, Gamepad2, Sparkles,
   ArrowUpDown, Flame, Droplet, PhoneCall, BookOpen, Tv, Scissors, Baby, Heart, ChevronRight as ChevronRightIcon,
-  Percent, Handshake, Compass
+  Percent, Handshake, Compass, ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -836,22 +836,19 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
 
                   <div className="pt-4 border-t border-[#4a4a4a]/10 flex flex-col sm:flex-row items-center gap-4">
                     <button
-                      onClick={() => setPdfViewerUrl(data.brochureUrl)}
+                      onClick={() => {
+                        const isMobile = window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent);
+                        if (isMobile) {
+                          window.open(data.brochureUrl, '_blank');
+                        } else {
+                          setPdfViewerUrl(data.brochureUrl);
+                        }
+                      }}
                       className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#f59e0b] hover:bg-[#d4890a] text-black px-6 py-3 rounded text-xs font-mono font-bold tracking-widest uppercase transition duration-300 cursor-pointer"
                     >
                       <Eye className="w-4 h-4" />
                       <span>View Brochure</span>
                     </button>
-                    <a
-                      href={data.brochureUrl}
-                      download
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-[#f59e0b]/40 hover:border-[#f59e0b] text-[#f59e0b] px-6 py-3 rounded text-xs font-mono font-bold tracking-widest uppercase transition duration-300 cursor-pointer"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Download Brochure</span>
-                    </a>
                   </div>
                 </div>
               </section>
@@ -1089,12 +1086,22 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                 Viewing on 11 Estates
               </span>
             </div>
-            <button
-              onClick={() => setPdfViewerUrl(null)}
-              className="w-8 h-8 bg-white/10 hover:bg-white/20 transition-all rounded-full flex items-center justify-center text-white text-xs font-mono"
-            >
-              ✕
-            </button>
+            <div className="flex items-center gap-2">
+              <a
+                href={pdfViewerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 transition rounded text-white text-[10px] font-mono select-none"
+              >
+                <ExternalLink className="w-3 h-3" /> Open in New Tab
+              </a>
+              <button
+                onClick={() => setPdfViewerUrl(null)}
+                className="w-8 h-8 bg-white/10 hover:bg-white/20 transition-all rounded-full flex items-center justify-center text-white text-xs font-mono"
+              >
+                ✕
+              </button>
+            </div>
           </div>
           {/* PDF Viewer Frame */}
           <div className="flex-1 w-full h-full bg-[#121212]" onClick={(e) => e.stopPropagation()}>
