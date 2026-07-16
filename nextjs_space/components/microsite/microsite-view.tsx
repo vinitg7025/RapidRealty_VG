@@ -16,6 +16,7 @@ import { generateImageAltText } from '@/lib/seo';
 interface MicrositeViewProps {
   slug: string;
   projectName: string;
+  sectionSlug?: string;
 }
 
 function getHighlightIcon(text: string) {
@@ -139,10 +140,26 @@ const SECTIONS = [
   { id: 'faq', label: 'FAQs' },
 ];
 
-export default function MicrositeView({ slug, projectName }: MicrositeViewProps) {
+const slugToSectionId: Record<string, string> = {
+  'pricing': 'pricing',
+  'floor-plans': 'pricing',
+  'master-plan': 'masterplan',
+  'connectivity': 'connectivity',
+  'amenities': 'amenities',
+  'builder': 'builder',
+  'faq': 'faq'
+};
+
+export default function MicrositeView({ slug, projectName, sectionSlug }: MicrositeViewProps) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState('overview');
+  const [isReady, setIsReady] = useState(false);
+  const [activeSection, setActiveSection] = useState(() => {
+    if (sectionSlug && slugToSectionId[sectionSlug]) {
+      return slugToSectionId[sectionSlug];
+    }
+    return 'overview';
+  });
   const [heroIndex, setHeroIndex] = useState(0);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', countryCode: '+91' });
   const [phoneError, setPhoneError] = useState('');
@@ -172,6 +189,31 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (!loading && data) {
+      if (sectionSlug) {
+        const targetId = slugToSectionId[sectionSlug];
+        if (targetId) {
+          const timer = setTimeout(() => {
+            const el = sectionRefs.current[targetId];
+            if (el) {
+              window.scrollTo({ top: Math.max(0, el.offsetTop - 350), behavior: 'auto' });
+              setIsReady(true);
+              const smoothTimer = setTimeout(() => {
+                window.scrollTo({ top: el.offsetTop - 120, behavior: 'smooth' });
+              }, 100);
+              return () => clearTimeout(smoothTimer);
+            } else {
+              setIsReady(true);
+            }
+          }, 50);
+          return () => clearTimeout(timer);
+        }
+      }
+      setIsReady(true);
+    }
+  }, [loading, data, sectionSlug]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -243,7 +285,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
     }
   };
 
-  if (loading) {
+  if (loading || !isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#121212]">
         <Loader2 className="w-8 h-8 animate-spin text-[#f59e0b]" />

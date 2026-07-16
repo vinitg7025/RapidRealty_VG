@@ -155,10 +155,13 @@ export function generateResidenceSchema(
   city: string,
   projectDescription: string,
   projectType: string,
-  pricingData: Array<{ config: string; area: string; price: string }>
+  pricingData: Array<{ config: string; area: string; price: string }>,
+  builderSlug: string,
+  projectSlug: string
 ) {
   const isCommercial = projectType === 'Commercial';
   const type = isCommercial ? 'CommercialProperty' : 'ApartmentComplex';
+  const mainUrl = `https://www.11estates.in/${builderSlug}/${projectSlug}`;
   
   const offers = (pricingData ?? [])
     .filter(p => p.config?.trim() && p.price?.trim())
@@ -172,6 +175,8 @@ export function generateResidenceSchema(
   const schema: any = {
     "@context": "https://schema.org",
     "@type": type,
+    "@id": `${mainUrl}#project`,
+    "url": mainUrl,
     "name": projectName,
     "description": projectDescription || `Explore ${projectName} in ${location}, ${city} by ${builderName}.`,
     "address": {
@@ -188,3 +193,60 @@ export function generateResidenceSchema(
   
   return schema;
 }
+
+export interface SeoMetadataInput {
+  projectName: string;
+  builderName: string;
+  location: string;
+  city?: string;
+  sectionSlug?: string;
+}
+
+export function generateSectionMetadata(input: SeoMetadataInput) {
+  const { projectName, builderName, location, city, sectionSlug } = input;
+  const loc = location || city || '';
+  
+  let title = `${projectName} in ${loc} | 11 Estates`;
+  let description = `Explore ${projectName} in ${loc}. Latest pricing, floor plans, amenities, brochure and expert guidance from 11 Estates.`;
+
+  if (sectionSlug) {
+    switch (sectionSlug) {
+      case 'pricing':
+        title = `${projectName} Price and Configurations | 11 Estates`;
+        description = `Check out the price range, configurations, and pricing details for ${projectName} in ${loc} by ${builderName}. Get expert guidance from 11 Estates.`;
+        break;
+      case 'floor-plans':
+        title = `${projectName} Floor Plans and Unit Layouts | 11 Estates`;
+        description = `View floor plans, unit layouts, carpet areas, and configurations for ${projectName} in ${loc} by ${builderName}. Get details on 11 Estates.`;
+        break;
+      case 'master-plan':
+        title = `${projectName} Master Plan | 11 Estates`;
+        description = `Explore the master plan layout, tower placements, and layout design of ${projectName} in ${loc} by ${builderName}. Details on 11 Estates.`;
+        break;
+      case 'connectivity':
+        title = `${projectName} Location and Connectivity | 11 Estates`;
+        description = `Discover the location map, connectivity features, and nearby landmarks for ${projectName} in ${loc} by ${builderName} on 11 Estates.`;
+        break;
+      case 'amenities':
+        title = `${projectName} Amenities | 11 Estates`;
+        description = `Explore all the modern amenities, leisure facilities, and specifications of ${projectName} in ${loc} by ${builderName} on 11 Estates.`;
+        break;
+      case 'builder':
+        title = `${projectName} by ${builderName} | Builder Details | 11 Estates`;
+        description = `Read details about ${builderName}, their track record, expertise, and ongoing projects for ${projectName} in ${loc} on 11 Estates.`;
+        break;
+      case 'faq':
+        title = `${projectName} FAQs | 11 Estates`;
+        description = `Find answers to frequently asked questions about pricing, possession date, RERA, and location of ${projectName} in ${loc} on 11 Estates.`;
+        break;
+    }
+  }
+
+  // Truncate description to 160 characters if it's too long
+  if (description.length > 160) {
+    description = description.substring(0, 157) + '...';
+  }
+
+  return { title, description };
+}
+

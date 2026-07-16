@@ -6,7 +6,8 @@ import {
   generateOrganizationSchema,
   generateBreadcrumbSchema,
   generateFAQSchema,
-  generateResidenceSchema
+  generateResidenceSchema,
+  generateSectionMetadata
 } from '@/lib/seo';
 
 // Reserve known paths
@@ -20,10 +21,22 @@ export default async function MicrositePage({
   searchParams: { preview?: string };
 }) {
   const slugParts = params?.slug ?? [];
-  const fullSlug = slugParts.join('/');
+  
+  if (slugParts.length < 2 || slugParts.length > 3) {
+    notFound();
+  }
+
+  const [builderSlug, projectSlug, sectionSlug] = slugParts;
+  const APPROVED_SECTIONS = ['pricing', 'floor-plans', 'master-plan', 'connectivity', 'amenities', 'builder', 'faq'];
+
+  if (sectionSlug && !APPROVED_SECTIONS.includes(sectionSlug)) {
+    notFound();
+  }
+
+  const fullSlug = `${builderSlug}/${projectSlug}`;
   const isPreview = searchParams?.preview === 'true';
 
-  if (!fullSlug || RESERVED_SLUGS.includes(slugParts[0])) {
+  if (!builderSlug || RESERVED_SLUGS.includes(builderSlug)) {
     notFound();
   }
 
@@ -49,14 +62,13 @@ export default async function MicrositePage({
 
   const pricing = parseJsonField(microsite.pricingData);
   const faqs = parseJsonField(microsite.faqs);
-  const [builderSlug, projectSlug] = fullSlug.split('/');
 
   const orgSchema = generateOrganizationSchema();
   const breadcrumbSchema = generateBreadcrumbSchema(
     microsite.builderName,
-    builderSlug || '',
+    builderSlug,
     microsite.projectName,
-    projectSlug || ''
+    projectSlug
   );
   const residenceSchema = generateResidenceSchema(
     microsite.projectName,
@@ -65,7 +77,9 @@ export default async function MicrositePage({
     microsite.city,
     microsite.projectDescription,
     microsite.projectType,
-    pricing
+    pricing,
+    builderSlug,
+    projectSlug
   );
   const faqSchema = generateFAQSchema(faqs);
 
@@ -89,13 +103,25 @@ export default async function MicrositePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
-      <MicrositeView slug={fullSlug} projectName={microsite.projectName} />
+      <MicrositeView slug={fullSlug} projectName={microsite.projectName} sectionSlug={sectionSlug} />
     </>
   );
 }
 
 export async function generateMetadata({ params }: { params: { slug: string[] } }) {
-  const fullSlug = (params?.slug ?? []).join('/');
+  const slugParts = params?.slug ?? [];
+  if (slugParts.length < 2 || slugParts.length > 3) {
+    return { title: 'Not Found' };
+  }
+
+  const [builderSlug, projectSlug, sectionSlug] = slugParts;
+  const APPROVED_SECTIONS = ['pricing', 'floor-plans', 'master-plan', 'connectivity', 'amenities', 'builder', 'faq'];
+
+  if (sectionSlug && !APPROVED_SECTIONS.includes(sectionSlug)) {
+    return { title: 'Not Found' };
+  }
+
+  const fullSlug = `${builderSlug}/${projectSlug}`;
   const microsite = await prisma.microsite.findUnique({
     where: { slug: fullSlug },
     select: { projectName: true, builderName: true, location: true, city: true, status: true, heroImages: true },
@@ -104,9 +130,16 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
   if (!microsite) return { title: 'Not Found' };
 
   const isPublished = microsite.status === 'PUBLISHED';
-  const seoTitle = `${microsite.projectName} | Price, Floor Plans, Amenities & Brochure | 11 Estates`;
-  const metaDescription = `Explore ${microsite.projectName} in ${microsite.location}. Latest pricing, floor plans, amenities, brochure and expert guidance from 11 Estates.`;
+  const { title, description } = generateSectionMetadata({
+    projectName: microsite.projectName,
+    builderName: microsite.builderName,
+    location: microsite.location,
+    city: microsite.city,
+    sectionSlug,
+  });
+
   const canonicalUrl = `https://www.11estates.in/${fullSlug}`;
+  const pageUrl = sectionSlug ? `${canonicalUrl}/${sectionSlug}` : canonicalUrl;
 
   // Resolve hero image for Social Share Image
   let ogImageUrl = 'https://www.11estates.in/og-image.png';
@@ -131,8 +164,8 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
   }
 
   return {
-    title: seoTitle,
-    description: metaDescription,
+    title,
+    description,
     alternates: {
       canonical: canonicalUrl,
     },
@@ -141,9 +174,9 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
       follow: isPublished,
     },
     openGraph: {
-      title: seoTitle,
-      description: metaDescription,
-      url: canonicalUrl,
+      title,
+      description,
+      url: pageUrl,
       images: [
         {
           url: ogImageUrl,
@@ -156,10 +189,11 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
     },
     twitter: {
       card: 'summary_large_image',
-      title: seoTitle,
-      description: metaDescription,
+      title,
+      description,
       images: [ogImageUrl],
     },
   };
 }
+
 
