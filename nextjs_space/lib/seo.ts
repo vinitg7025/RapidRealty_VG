@@ -206,7 +206,7 @@ export function generateSectionMetadata(input: SeoMetadataInput) {
   const { projectName, builderName, location, city, sectionSlug } = input;
   const loc = location || city || '';
   
-  let title = `${projectName} in ${loc} | 11 Estates`;
+  let title = `${builderName} ${projectName} | ${loc} | 11 Estates`;
   let description = `Explore ${projectName} in ${loc}. Latest pricing, floor plans, amenities, brochure and expert guidance from 11 Estates.`;
 
   if (sectionSlug) {
