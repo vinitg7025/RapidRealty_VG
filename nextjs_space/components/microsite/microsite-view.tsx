@@ -11,6 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { generateImageAltText } from '@/lib/seo';
 
 interface MicrositeViewProps {
   slug: string;
@@ -379,7 +380,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                 <div className="relative rounded overflow-hidden bg-[#1a1a1a] aspect-[16/9] border border-[#4a4a4a]/10">
                   <Image
                     src={allImages[heroIndex % allImages.length] ?? ''}
-                    alt={`${data?.projectName ?? ''} image`}
+                    alt={generateImageAltText(data?.projectName ?? '', heroImages.includes(allImages[heroIndex % allImages.length]) ? 'hero' : 'gallery', allImages[heroIndex % allImages.length])}
                     fill
                     priority
                     sizes="(max-width: 1024px) 100vw, 66vw"
@@ -412,7 +413,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                         className={`w-24 h-16 rounded overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${
                           i === heroIndex % allImages.length ? 'border-[#f59e0b] opacity-100 scale-[0.98]' : 'border-transparent opacity-50 hover:opacity-80'
                         }`}>
-                        <Image src={url} alt="" width={96} height={64} className="w-full h-full object-cover" />
+                        <Image src={url} alt={generateImageAltText(data?.projectName ?? '', heroImages.includes(url) ? 'hero' : 'gallery', url)} width={96} height={64} className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
@@ -506,7 +507,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                   Project <span className="italic text-[#a3a3a3]/90">Master Plan</span>
                 </h2>
                 <div className="rounded overflow-hidden bg-[#1a1a1a] border border-[#4a4a4a]/10 p-4 max-w-3xl flex flex-col items-center gap-2">
-                  <Image src={data.masterPlanUrl} alt="Master Plan" width={1600} height={1000} sizes="(max-width: 768px) 100vw, 768px" className="w-full h-auto object-contain max-h-[500px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(data.masterPlanUrl)} />
+                  <Image src={data.masterPlanUrl} alt={generateImageAltText(data?.projectName ?? '', 'masterPlan')} width={1600} height={1000} sizes="(max-width: 768px) 100vw, 768px" className="w-full h-auto object-contain max-h-[500px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(data.masterPlanUrl)} />
                   <p className="text-[10px] text-amber-500 font-mono tracking-wider uppercase select-none mt-1">Click to enlarge</p>
                 </div>
               </section>
@@ -624,7 +625,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                           <div className="md:w-1/2 flex flex-col items-center justify-center bg-black/20 rounded p-4 border border-[#4a4a4a]/10 gap-2">
                             <Image
                               src={activeConfig.floorPlanImageUrl}
-                              alt={`${activeConfig.config} Floor Plan`}
+                              alt={generateImageAltText(data?.projectName ?? '', 'floorPlan', activeConfig.config)}
                               width={1200}
                               height={900}
                               sizes="(max-width: 768px) 100vw, 384px"
@@ -655,7 +656,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
                   {floorPlanUrls.filter(Boolean).map((url: string, i: number) => (
                     <div key={i} className="rounded overflow-hidden bg-[#1a1a1a] border border-[#4a4a4a]/10 p-4 flex flex-col items-center gap-2">
-                      <Image src={url} alt={`Floor Plan ${i + 1}`} width={1200} height={900} sizes="(max-width: 768px) 100vw, 384px" className="w-full h-auto object-contain max-h-[350px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(url)} />
+                      <Image src={url} alt={generateImageAltText(data?.projectName ?? '', 'floorPlan', `Layout ${i + 1}`)} width={1200} height={900} sizes="(max-width: 768px) 100vw, 384px" className="w-full h-auto object-contain max-h-[350px] rounded cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(url)} />
                       <p className="text-[10px] text-amber-500 font-mono tracking-wider uppercase select-none mt-1">Click to enlarge</p>
                     </div>
                   ))}
@@ -679,7 +680,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                     <div className="space-y-6">
                       <div className="flex items-start gap-4 pb-3 border-b border-[#4a4a4a]/10">
                         {data?.builderLogoUrl && (
-                          <Image src={data.builderLogoUrl} alt="" width={64} height={64} className="w-16 h-16 object-contain rounded bg-[#121212] p-1 flex-shrink-0 cursor-zoom-in hover:opacity-90 transition-opacity duration-300" onClick={() => setLightboxImage(data.builderLogoUrl)} />
+                          <Image src={data.builderLogoUrl} alt={generateImageAltText(data?.projectName ?? '', 'logo')} width={64} height={64} className="w-16 h-16 object-contain rounded bg-[#121212] p-1 flex-shrink-0 cursor-zoom-in hover:opacity-90 transition-opacity duration-300" onClick={() => setLightboxImage(data.builderLogoUrl)} />
                         )}
                         <div className="space-y-1.5 flex-1 pt-1">
                           <h3 className="font-serif text-2xl text-white font-normal leading-none">{data?.builderName ?? ''}</h3>
@@ -766,7 +767,7 @@ export default function MicrositeView({ slug, projectName }: MicrositeViewProps)
                         {reraQrCodes.filter((r: any) => r?.qrImageUrl).map((r: any, i: number) => (
                           <div key={i} className="flex items-center gap-4 bg-[#121212]/40 border border-[#4a4a4a]/10 rounded-lg p-4">
                             <div className="w-20 h-20 flex-shrink-0 bg-white rounded p-1">
-                              <Image src={r.qrImageUrl} alt="" width={80} height={80} className="w-full h-full object-contain cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(r.qrImageUrl)} />
+                              <Image src={r.qrImageUrl} alt={`${data?.projectName ?? ''} ${r.towerName ? r.towerName + ' ' : ''}RERA QR Code`} width={80} height={80} className="w-full h-full object-contain cursor-zoom-in hover:opacity-95 transition-opacity duration-300" onClick={() => setLightboxImage(r.qrImageUrl)} />
                             </div>
                             <div className="space-y-1">
                               {r?.towerName && (

@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 import { getFileUrl } from '@/lib/s3';
+import { generateUniqueSlug } from '@/lib/seo-server';
 
 export async function GET(request: Request) {
   try {
@@ -55,32 +56,32 @@ export async function POST(request: Request) {
     const userId = (session.user as any).id;
     const body = await request.json();
 
+    const builderName = body.builderName ?? '';
+    const projectName = body.projectName ?? '';
+    if (!builderName.trim() || !projectName.trim()) {
+      return NextResponse.json({ error: 'Builder name and Project name are required' }, { status: 400 });
+    }
+
+    const calculatedSlug = await generateUniqueSlug(builderName, projectName);
+
     // Check reserved slug protection
     const RESERVED_BUILDER_SLUGS = [
       'commercial', 'residential', 'about', 'contact', 'insights',
       'api', 'admin', 'login', 'dashboard', 'projects', 'project',
       'builder', 'builders'
     ];
-    if (body.slug) {
-      const builderSlug = body.slug.split('/')[0]?.toLowerCase();
-      if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
-        return NextResponse.json(
-          { error: 'The builder slug/name cannot be a reserved word (e.g. contact, about, api...)' },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Check slug uniqueness
-    const existingSlug = await prisma.microsite.findUnique({ where: { slug: body.slug } });
-    if (existingSlug) {
-      return NextResponse.json({ error: 'This URL slug is already taken' }, { status: 400 });
+    const builderSlug = calculatedSlug.split('/')[0]?.toLowerCase();
+    if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
+      return NextResponse.json(
+        { error: 'The builder slug/name cannot be a reserved word (e.g. contact, about, api...)' },
+        { status: 400 }
+      );
     }
 
     const microsite = await prisma.microsite.create({
       data: {
         id: body.id,
-        slug: body.slug,
+        slug: calculatedSlug,
         status: body.status ?? 'DRAFT',
         createdById: userId,
         projectName: body.projectName ?? '',

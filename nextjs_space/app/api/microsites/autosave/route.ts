@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { generateUniqueSlug } from '@/lib/seo-server';
 
 // Auto-save: creates a DRAFT if new, or updates existing
 export async function POST(request: Request) {
@@ -37,17 +38,27 @@ export async function POST(request: Request) {
         if (role !== 'ADMIN' && existing.createdById !== userId) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
+
+        const builderName = formData.builderName !== undefined ? formData.builderName : existing.builderName;
+        const projectName = formData.projectName !== undefined ? formData.projectName : existing.projectName;
+
+        if (!builderName?.trim() || !projectName?.trim()) {
+          return NextResponse.json({ error: 'Builder name and Project name are required' }, { status: 400 });
+        }
+
+        const calculatedSlug = await generateUniqueSlug(builderName, projectName, existing.id);
         const updateData = buildData(formData);
+        updateData.slug = calculatedSlug;
 
         // Validate slug if updated during autosave
-        if (updateData.slug && updateData.slug !== existing.slug) {
+        if (calculatedSlug !== existing.slug) {
           // Check reserved slug protection
           const RESERVED_BUILDER_SLUGS = [
             'commercial', 'residential', 'about', 'contact', 'insights',
             'api', 'admin', 'login', 'dashboard', 'projects', 'project',
             'builder', 'builders'
           ];
-          const builderSlug = updateData.slug.split('/')[0]?.toLowerCase();
+          const builderSlug = calculatedSlug.split('/')[0]?.toLowerCase();
           if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
             return NextResponse.json(
               { error: 'The builder slug/name cannot be a reserved word (e.g. contact, about, api...)' },
@@ -55,15 +66,10 @@ export async function POST(request: Request) {
             );
           }
 
-          const slugExists = await prisma.microsite.findUnique({ where: { slug: updateData.slug } });
-          if (slugExists) {
-            return NextResponse.json({ error: 'Slug already taken' }, { status: 400 });
-          }
-
           // Handle redirect mapping if published
           if (existing.status === 'PUBLISHED') {
             const oldSlug = existing.slug;
-            const newSlug = updateData.slug;
+            const newSlug = calculatedSlug;
             
             await prisma.slugRedirect.upsert({
               where: { oldSlug },
@@ -83,9 +89,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ microsite, isNew: false });
       } else {
         // Create new draft with this pre-generated id
-        if (!formData.slug || !formData.projectName) {
-          return NextResponse.json({ error: 'Project name and slug required for auto-save' }, { status: 400 });
+        const builderName = formData.builderName ?? '';
+        const projectName = formData.projectName ?? '';
+        if (!builderName.trim() || !projectName.trim()) {
+          return NextResponse.json({ error: 'Builder name and Project name required for auto-save' }, { status: 400 });
         }
+
+        const calculatedSlug = await generateUniqueSlug(builderName, projectName);
 
         // Check reserved slug protection
         const RESERVED_BUILDER_SLUGS = [
@@ -93,7 +103,7 @@ export async function POST(request: Request) {
           'api', 'admin', 'login', 'dashboard', 'projects', 'project',
           'builder', 'builders'
         ];
-        const builderSlug = formData.slug.split('/')[0]?.toLowerCase();
+        const builderSlug = calculatedSlug.split('/')[0]?.toLowerCase();
         if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
           return NextResponse.json(
             { error: 'The builder slug/name cannot be a reserved word (e.g. contact, about, api...)' },
@@ -101,20 +111,16 @@ export async function POST(request: Request) {
           );
         }
 
-        // Check slug
-        const existingSlug = await prisma.microsite.findUnique({ where: { slug: formData.slug } });
-        if (existingSlug) {
-          return NextResponse.json({ error: 'Slug already taken' }, { status: 400 });
-        }
-
         const data = buildData(formData);
+        data.slug = calculatedSlug;
+
         const microsite = await prisma.microsite.create({
           data: {
             id,
             ...data,
-            slug: formData.slug,
-            projectName: formData.projectName ?? '',
-            builderName: formData.builderName ?? '',
+            slug: calculatedSlug,
+            projectName,
+            builderName,
             location: formData.location ?? '',
             status: 'DRAFT',
             createdById: userId,
@@ -124,9 +130,13 @@ export async function POST(request: Request) {
       }
     } else {
       // Create new draft
-      if (!formData.slug || !formData.projectName) {
-        return NextResponse.json({ error: 'Project name and slug required for auto-save' }, { status: 400 });
+      const builderName = formData.builderName ?? '';
+      const projectName = formData.projectName ?? '';
+      if (!builderName.trim() || !projectName.trim()) {
+        return NextResponse.json({ error: 'Builder name and Project name required for auto-save' }, { status: 400 });
       }
+
+      const calculatedSlug = await generateUniqueSlug(builderName, projectName);
 
       // Check reserved slug protection
       const RESERVED_BUILDER_SLUGS = [
@@ -134,7 +144,7 @@ export async function POST(request: Request) {
         'api', 'admin', 'login', 'dashboard', 'projects', 'project',
         'builder', 'builders'
       ];
-      const builderSlug = formData.slug.split('/')[0]?.toLowerCase();
+      const builderSlug = calculatedSlug.split('/')[0]?.toLowerCase();
       if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
         return NextResponse.json(
           { error: 'The builder slug/name cannot be a reserved word (e.g. contact, about, api...)' },
@@ -142,18 +152,15 @@ export async function POST(request: Request) {
         );
       }
 
-      // Check slug
-      const existingSlug = await prisma.microsite.findUnique({ where: { slug: formData.slug } });
-      if (existingSlug) {
-        return NextResponse.json({ error: 'Slug already taken' }, { status: 400 });
-      }
       const data = buildData(formData);
+      data.slug = calculatedSlug;
+
       const microsite = await prisma.microsite.create({
         data: {
           ...data,
-          slug: formData.slug,
-          projectName: formData.projectName ?? '',
-          builderName: formData.builderName ?? '',
+          slug: calculatedSlug,
+          projectName,
+          builderName,
           location: formData.location ?? '',
           status: 'DRAFT',
           createdById: userId,
@@ -166,3 +173,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Auto-save failed' }, { status: 500 });
   }
 }
+

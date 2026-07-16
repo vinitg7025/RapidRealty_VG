@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, Save, Eye, Building2, MapPin, IndianRupee, Wifi, TreePine, HelpCircle, FileText, ImageIcon, Info, QrCode, CheckCircle2, Sparkles, Upload } from 'lucide-react';
 import FileUpload from './file-upload';
 import { uploadFileToS3 } from '@/lib/upload-helper';
+import { generateMicrositeSlugs } from '@/lib/seo';
 
 interface MicrositeFormProps {
   initialData?: any;
@@ -192,14 +193,11 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
   const updateField = (field: string, value: any) => {
     setForm((prev: any) => {
       const updated = { ...(prev ?? {}), [field]: value };
-      if ((field === 'projectName' || field === 'builderName') && !isEdit) {
+      if (field === 'projectName' || field === 'builderName') {
         const builder = field === 'builderName' ? value : (prev?.builderName ?? '');
         const project = field === 'projectName' ? value : (prev?.projectName ?? '');
-        if (builder && project) {
-          updated.slug = slugify(builder) + '/' + slugify(project);
-        } else if (project) {
-          updated.slug = slugify(project);
-        }
+        const { fullSlug } = generateMicrositeSlugs(builder, project);
+        updated.slug = fullSlug;
       }
       return updated;
     });
@@ -325,17 +323,11 @@ export default function MicrositeForm({ initialData, isEdit }: MicrositeFormProp
             </div>
 
             <div>
-              <label className={labelClass}>URL Slug *</label>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-white/30 whitespace-nowrap">https://11estates.in/{form?.builderName ? slugify(form.builderName) + '/' : ''}</span>
-                <input type="text" value={(form?.slug ?? '').replace(form?.builderName ? slugify(form.builderName) + '/' : '', '')}
-                  onChange={(e) => {
-                    const prefix = form?.builderName ? slugify(form.builderName) + '/' : '';
-                    updateField('slug', prefix + slugify(e.target.value));
-                  }}
-                  className={`flex-1 ${inputClass}`} placeholder="project-name" />
+              <label className={labelClass}>URL Slug</label>
+              <div className="flex items-center gap-2 bg-[#121212]/50 px-4 py-3 rounded-lg border border-white/5 select-none font-mono text-sm text-white/60">
+                <span>https://www.11estates.in/{form?.slug || 'builder-slug/project-slug'}</span>
               </div>
-              <p className="text-xs text-white/25 mt-1">Full URL: https://11estates.in/{form?.slug ?? ''}</p>
+              <p className="text-xs text-white/25 mt-1.5">Automatically generated from Builder Name and Project Name.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

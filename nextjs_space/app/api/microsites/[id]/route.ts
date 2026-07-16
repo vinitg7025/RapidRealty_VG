@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { generateUniqueSlug } from '@/lib/seo-server';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -39,15 +40,20 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const builderName = body.builderName !== undefined ? body.builderName : existing.builderName;
+    const projectName = body.projectName !== undefined ? body.projectName : existing.projectName;
+    
+    const calculatedSlug = await generateUniqueSlug(builderName, projectName, existing.id);
+
     // Check slug uniqueness if changed
-    if (body.slug && body.slug !== existing.slug) {
+    if (calculatedSlug !== existing.slug) {
       // Check reserved slug protection
       const RESERVED_BUILDER_SLUGS = [
         'commercial', 'residential', 'about', 'contact', 'insights',
         'api', 'admin', 'login', 'dashboard', 'projects', 'project',
         'builder', 'builders'
       ];
-      const builderSlug = body.slug.split('/')[0]?.toLowerCase();
+      const builderSlug = calculatedSlug.split('/')[0]?.toLowerCase();
       if (RESERVED_BUILDER_SLUGS.includes(builderSlug)) {
         return NextResponse.json(
           { error: 'The builder slug/name cannot be a reserved word (e.g. contact, about, api...)' },
@@ -55,13 +61,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         );
       }
 
-      const slugExists = await prisma.microsite.findUnique({ where: { slug: body.slug } });
-      if (slugExists) return NextResponse.json({ error: 'URL slug already taken' }, { status: 400 });
-
       // Handle redirect mapping if published
       if (existing.status === 'PUBLISHED') {
         const oldSlug = existing.slug;
-        const newSlug = body.slug;
+        const newSlug = calculatedSlug;
         
         // 1. Create or update the redirect from oldSlug to newSlug
         await prisma.slugRedirect.upsert({
@@ -77,6 +80,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         });
       }
     }
+
+    body.slug = calculatedSlug;
+
 
     const updateData: any = {};
     const fields = ['slug', 'status', 'projectName', 'builderName', 'location', 'city',
