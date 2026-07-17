@@ -804,7 +804,7 @@ export default function MicrositeView({ slug, projectName, sectionSlug }: Micros
                   {/* RERA QR Codes inside same block */}
                   {reraQrCodes.length > 0 && reraQrCodes[0]?.qrImageUrl && (
                     <div className={`pt-6 ${data?.builderDescription ? 'border-t border-[#4a4a4a]/10' : ''} space-y-4`}>
-                      <h4 className="text-xs font-mono uppercase tracking-widest text-[#f59e0b] mb-1">RERA Status</h4>
+                      <h3 className="text-xs font-mono uppercase tracking-widest text-[#f59e0b] mb-1">RERA Status</h3>
                       <div className={`grid gap-6 ${reraQrCodes.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
                         {reraQrCodes.filter((r: any) => r?.qrImageUrl).map((r: any, i: number) => (
                           <div key={i} className="flex items-center gap-4 bg-[#121212]/40 border border-[#4a4a4a]/10 rounded-lg p-4">
@@ -1053,7 +1053,7 @@ export default function MicrositeView({ slug, projectName, sectionSlug }: Micros
             <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-8 lg:justify-end">
               {/* Advisory Hubs */}
               <div className="space-y-4">
-                <h4 className="font-mono text-[10px] tracking-[0.2em] uppercase text-white font-semibold">Advisory Hubs</h4>
+                <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-white font-semibold">Advisory Hubs</p>
                 <ul className="space-y-2.5 text-xs text-brand-silver/75 font-light">
                   <li><a href="https://www.11estates.in/commercial" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Commercial Leasing</a></li>
                   <li><a href="https://www.11estates.in/commercial" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Enterprise Expansion</a></li>
@@ -1065,7 +1065,7 @@ export default function MicrositeView({ slug, projectName, sectionSlug }: Micros
 
               {/* Corporate */}
               <div className="space-y-4">
-                <h4 className="font-mono text-[10px] tracking-[0.2em] uppercase text-white font-semibold">Corporate</h4>
+                <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-white font-semibold">Corporate</p>
                 <ul className="space-y-2.5 text-xs text-brand-silver/75 font-light">
                   <li><a href="https://www.11estates.in/#insights" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Insights & Intelligence</a></li>
                   <li><a href="https://www.11estates.in/#contact" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Contact Advisory</a></li>
