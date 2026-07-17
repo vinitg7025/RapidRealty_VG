@@ -250,3 +250,96 @@ export function generateSectionMetadata(input: SeoMetadataInput) {
   return { title, description };
 }
 
+export const DEFAULT_SITE_URL = 'https://www.11estates.in';
+
+export function getSiteUrl(): string {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL;
+  return siteUrl.replace(/\/+$/, '');
+}
+
+export function getCanonicalUrl(path: string): string {
+  const baseUrl = getSiteUrl();
+  if (!path || path === '/') return baseUrl;
+
+  let cleanPath = path.split('?')[0].split('#')[0];
+  cleanPath = cleanPath.replace(/^\/+|\/+$/g, '');
+  return `${baseUrl}/${cleanPath}`;
+}
+
+export interface AlternateLink {
+  rel: string;
+  hrefLang: string;
+  href: string;
+}
+
+export interface MetadataInput {
+  title: string;
+  description: string;
+  path: string;
+  ogImage?: string;
+  noindex?: boolean;
+  alternates?: AlternateLink[];
+}
+
+import type { Metadata } from 'next';
+
+export function constructMetadata(input: MetadataInput): Metadata {
+  const { title, description, path, ogImage, noindex = false, alternates = [] } = input;
+  const canonicalUrl = getCanonicalUrl(path);
+  const siteUrl = getSiteUrl();
+  const defaultOg = `${siteUrl}/og/11-estates-default.jpg`;
+  const resolvedOg = ogImage || defaultOg;
+
+  const alternateLanguages: Record<string, string> = {};
+  alternates.forEach(alt => {
+    alternateLanguages[alt.hrefLang] = alt.href;
+  });
+
+  return {
+    title,
+    description,
+    metadataBase: new URL(siteUrl),
+    alternates: {
+      canonical: canonicalUrl,
+      languages: alternateLanguages
+    },
+    robots: {
+      index: !noindex,
+      follow: !noindex,
+      nocache: noindex,
+      googleBot: {
+        index: !noindex,
+        follow: !noindex,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      images: [
+        {
+          url: resolvedOg,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      type: 'website',
+      siteName: '11 Estates',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [resolvedOg],
+    },
+    other: {
+      'google-site-verification': process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || 'g-verification-placeholder',
+    }
+  };
+}
+
+

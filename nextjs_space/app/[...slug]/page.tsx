@@ -7,7 +7,8 @@ import {
   generateBreadcrumbSchema,
   generateFAQSchema,
   generateResidenceSchema,
-  generateSectionMetadata
+  generateSectionMetadata,
+  constructMetadata
 } from '@/lib/seo';
 
 // Reserve known paths
@@ -163,37 +164,13 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
     }
   }
 
-  return {
+  return constructMetadata({
     title,
     description,
-    alternates: {
-      canonical: canonicalUrl,
-    },
-    robots: {
-      index: isPublished,
-      follow: isPublished,
-    },
-    openGraph: {
-      title,
-      description,
-      url: pageUrl,
-      images: [
-        {
-          url: ogImageUrl,
-          width: 1200,
-          height: 630,
-          alt: `${microsite.projectName} Hero Image`,
-        },
-      ],
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [ogImageUrl],
-    },
-  };
+    path: sectionSlug ? `${fullSlug}/${sectionSlug}` : fullSlug,
+    ogImage: ogImageUrl,
+    noindex: !isPublished
+  });
 }
 
 
