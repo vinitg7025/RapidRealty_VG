@@ -12,6 +12,11 @@ export async function GET() {
     }
 
     return NextResponse.json({
+      hasR2Endpoint: !!process.env.R2_ENDPOINT,
+      hasR2AccessKey: !!process.env.R2_ACCESS_KEY_ID,
+      hasR2SecretKey: !!process.env.R2_SECRET_ACCESS_KEY,
+      hasR2Bucket: !!process.env.R2_BUCKET_NAME,
+      hasR2PublicUrl: !!(process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL),
       hasVercelBlobToken: !!(process.env.PUBLIC_BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN),
       hasAwsAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
       hasAwsSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
