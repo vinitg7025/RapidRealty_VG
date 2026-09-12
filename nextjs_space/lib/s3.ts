@@ -8,85 +8,101 @@ function shouldServeInline(contentType: string): boolean {
     || contentType.startsWith('audio/');
 }
 
-export async function generatePresignedUploadUrl(fileName: string, contentType: string, isPublic: boolean = false) {
-  const hasAwsCreds = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
+function sanitizeFileName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9.-]/g, '_');
+}
+
+export async function generatePresignedUploadUrl(
+  fileName: string,
+  contentType: string,
+  isPublic: boolean = true,
+  builderSlug?: string,
+  projectSlug?: string,
+  assetType?: string
+) {
+  const hasR2Creds = !!(process.env.R2_ENDPOINT && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY);
+  const hasAwsCreds = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY);
   const hasVercelBlob = !!(process.env.PUBLIC_BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN);
 
-  if (!hasAwsCreds && hasVercelBlob) {
-    const cloud_storage_path = `uploads/${Date.now()}-${fileName}`;
-    const uploadUrl = `/api/upload/vercel-blob?path=${encodeURIComponent(cloud_storage_path)}`;
-    return { uploadUrl, cloud_storage_path };
+  const safeFileName = sanitizeFileName(fileName);
+  let cloud_storage_path: string;
+
+  if (builderSlug && projectSlug) {
+    const cleanAssetType = assetType ? assetType.toLowerCase().replace(/[^a-z0-9-]/g, '') : 'general';
+    cloud_storage_path = `projects/${builderSlug}/${projectSlug}/${cleanAssetType}/${Date.now()}-${safeFileName}`;
+  } else {
+    const folder = assetType ? assetType.toLowerCase().replace(/[^a-z0-9-]/g, '') : 'uploads';
+    cloud_storage_path = `projects/_general/${folder}/${Date.now()}-${safeFileName}`;
   }
 
-  if (!hasAwsCreds) {
-    console.log('AWS credentials not detected in env, using local upload fallback');
-    const cloud_storage_path = `local-uploads/${Date.now()}-${fileName}`;
-    const uploadUrl = `/api/upload/local?path=${encodeURIComponent(cloud_storage_path)}`;
-    return { uploadUrl, cloud_storage_path };
+  // 1. Cloudflare R2 or AWS S3 Presigned Upload
+  if (hasR2Creds || hasAwsCreds) {
+    try {
+      const s3 = createS3Client();
+      const { bucketName } = getBucketConfig();
+
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: cloud_storage_path,
+        ContentType: contentType,
+      });
+
+      const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      const r2PublicUrl = process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+      const publicUrl = r2PublicUrl ? `${r2PublicUrl.replace(/\/+$/, '')}/${cloud_storage_path}` : undefined;
+
+      return { uploadUrl, cloud_storage_path, publicUrl, provider: 'r2' };
+    } catch (error: any) {
+      console.warn('[R2/S3 Storage] Presigned URL generation failed, checking fallbacks:', error.message || error);
+    }
   }
 
-  try {
-    const s3 = createS3Client();
-    const { bucketName, folderPrefix } = getBucketConfig();
-    const prefix = isPublic ? `${folderPrefix}public/uploads` : `${folderPrefix}uploads`;
-    const cloud_storage_path = `${prefix}/${Date.now()}-${fileName}`;
-
-    const command = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: cloud_storage_path,
-      ContentType: contentType,
-    });
-
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-    return { uploadUrl, cloud_storage_path };
-  } catch (error: any) {
-    console.warn('S3 client or getSignedUrl failed, falling back to local upload:', error.message || error);
-    const cloud_storage_path = `local-uploads/${Date.now()}-${fileName}`;
-    const uploadUrl = `/api/upload/local?path=${encodeURIComponent(cloud_storage_path)}`;
-    return { uploadUrl, cloud_storage_path };
+  // 2. Vercel Blob Fallback
+  if (hasVercelBlob) {
+    const blobPath = `uploads/${Date.now()}-${safeFileName}`;
+    const uploadUrl = `/api/upload/vercel-blob?path=${encodeURIComponent(blobPath)}`;
+    return { uploadUrl, cloud_storage_path: blobPath, provider: 'vercel-blob' };
   }
+
+  // 3. Local Disk Storage Fallback
+  console.log('[Storage Provider] Using local upload fallback storage.');
+  const localPath = `local-uploads/${Date.now()}-${safeFileName}`;
+  const uploadUrl = `/api/upload/local?path=${encodeURIComponent(localPath)}`;
+  return { uploadUrl, cloud_storage_path: localPath, provider: 'local' };
 }
 
 export async function getFileUrl(cloud_storage_path: string, contentType: string, isPublic: boolean) {
+  if (!cloud_storage_path) return '';
+
+  // 1. Full URLs (legacy Vercel Blob, direct R2/S3 URLs)
   if (cloud_storage_path.startsWith('http://') || cloud_storage_path.startsWith('https://')) {
     return cloud_storage_path;
   }
 
+  // 2. Local uploads fallback
   if (cloud_storage_path.startsWith('local-uploads/') || cloud_storage_path.startsWith('/local-uploads/')) {
     return '/' + cloud_storage_path.replace(/^\/+/, '');
   }
 
-  const hasAwsCreds = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
-  if (!hasAwsCreds) {
-    // If it's a seed or existing path that isn't local-uploads/ but we don't have AWS credentials,
-    // we can return it as-is or fallback. Let's return the standard public S3 URL directly.
-    const { bucketName } = getBucketConfig();
-    const region = process.env.AWS_REGION ?? 'us-east-1';
-    return `https://${bucketName}.s3.${region}.amazonaws.com/${cloud_storage_path}`;
+  // 3. Configurable Cloudflare R2 Public Base URL (from R2_PUBLIC_URL env var)
+  const r2PublicUrl = process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+  if (r2PublicUrl) {
+    const cleanBase = r2PublicUrl.replace(/\/+$/, '');
+    const cleanPath = cloud_storage_path.replace(/^\/+/, '');
+    return `${cleanBase}/${cleanPath}`;
   }
 
-  try {
+  // 4. Cloudflare R2 Default Endpoint
+  if (process.env.R2_ENDPOINT) {
+    const endpoint = process.env.R2_ENDPOINT.replace(/\/+$/, '');
     const { bucketName } = getBucketConfig();
-    const s3 = createS3Client();
-
-    if (isPublic) {
-      const region = process.env.AWS_REGION ?? 'us-east-1';
-      return `https://${bucketName}.s3.${region}.amazonaws.com/${cloud_storage_path}`;
-    }
-
-    const command = new GetObjectCommand({
-      Bucket: bucketName,
-      Key: cloud_storage_path,
-      ResponseContentDisposition: shouldServeInline(contentType) ? 'inline' : 'attachment',
-    });
-
-    return getSignedUrl(s3, command, { expiresIn: 3600 });
-  } catch (error) {
-    // Fallback: return public URL directly if sign fails
-    const { bucketName } = getBucketConfig();
-    const region = process.env.AWS_REGION ?? 'us-east-1';
-    return `https://${bucketName}.s3.${region}.amazonaws.com/${cloud_storage_path}`;
+    return `${endpoint}/${bucketName}/${cloud_storage_path.replace(/^\/+/, '')}`;
   }
+
+  // 5. AWS S3 Fallback
+  const { bucketName } = getBucketConfig();
+  const region = process.env.AWS_REGION ?? 'us-east-1';
+  return `https://${bucketName}.s3.${region}.amazonaws.com/${cloud_storage_path}`;
 }
 
 export async function deleteFile(cloud_storage_path: string) {

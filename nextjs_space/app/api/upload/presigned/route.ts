@@ -10,12 +10,19 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { fileName, contentType, isPublic } = await request.json();
+    const { fileName, contentType, isPublic, builderSlug, projectSlug, assetType } = await request.json();
     if (!fileName || !contentType) {
       return NextResponse.json({ error: 'fileName and contentType required' }, { status: 400 });
     }
 
-    const result = await generatePresignedUploadUrl(fileName, contentType, isPublic ?? true);
+    const result = await generatePresignedUploadUrl(
+      fileName,
+      contentType,
+      isPublic ?? true,
+      builderSlug,
+      projectSlug,
+      assetType
+    );
     return NextResponse.json(result);
   } catch (error: any) {
     console.error('Upload presigned error:', error);

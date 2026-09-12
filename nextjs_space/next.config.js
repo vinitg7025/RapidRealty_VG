@@ -19,6 +19,8 @@ const nextConfig = {
     // images are auto-resized to device size and served as WebP.
     unoptimized: !process.env.VERCEL || process.env.NEXT_OUTPUT_MODE === 'export',
     remotePatterns: [
+      { protocol: 'https', hostname: '**.r2.dev' },
+      { protocol: 'https', hostname: '**.r2.cloudflarestorage.com' },
       { protocol: 'https', hostname: '**.blob.vercel-storage.com' },
       { protocol: 'https', hostname: '**' },
       { protocol: 'http', hostname: '**' },
