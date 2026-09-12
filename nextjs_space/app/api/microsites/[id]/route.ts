@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { generateUniqueSlug } from '@/lib/seo-server';
+import { revalidateMicrositePaths } from '@/lib/microsite-data';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -100,6 +101,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     console.log('PUT request body:', body);
     console.log('PUT updateData payload:', updateData);
     const microsite = await prisma.microsite.update({ where: { id: params.id }, data: updateData });
+    revalidateMicrositePaths(microsite.slug, existing.slug);
     return NextResponse.json({ microsite });
   } catch (error: any) {
     console.error(error);
@@ -122,6 +124,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     }
 
     await prisma.microsite.delete({ where: { id: params.id } });
+    revalidateMicrositePaths(existing.slug);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error(error);

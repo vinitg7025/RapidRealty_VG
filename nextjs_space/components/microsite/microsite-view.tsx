@@ -150,10 +150,17 @@ const slugToSectionId: Record<string, string> = {
   'faq': 'faq'
 };
 
-export default function MicrositeView({ slug, projectName, sectionSlug }: MicrositeViewProps) {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [isReady, setIsReady] = useState(false);
+interface MicrositeViewProps {
+  slug: string;
+  projectName: string;
+  sectionSlug?: string;
+  initialData?: any;
+}
+
+export default function MicrositeView({ slug, projectName, sectionSlug, initialData }: MicrositeViewProps) {
+  const [data, setData] = useState<any>(initialData ?? null);
+  const [loading, setLoading] = useState(!initialData);
+  const [isReady, setIsReady] = useState(!!initialData);
   const [activeSection, setActiveSection] = useState(() => {
     if (sectionSlug && slugToSectionId[sectionSlug]) {
       return slugToSectionId[sectionSlug];
@@ -183,12 +190,13 @@ export default function MicrositeView({ slug, projectName, sectionSlug }: Micros
   }, [pdfViewerUrl]);
 
   useEffect(() => {
+    if (initialData) return;
     fetch(`/api/microsites/public/${slug}`)
       .then((r) => r.json())
       .then((d) => { if (!d?.error) setData(d); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, initialData]);
 
   useEffect(() => {
     if (!loading && data) {

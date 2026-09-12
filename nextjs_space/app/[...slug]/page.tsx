@@ -1,7 +1,8 @@
+export const revalidate = 3600;
+
 import MicrositeView from '@/components/microsite/microsite-view';
-import { prisma } from '@/lib/prisma';
 import { notFound, redirect } from 'next/navigation';
-import { getFileUrl } from '@/lib/s3';
+import { getMicrositeBySlug, APPROVED_SECTIONS, RESERVED_SLUGS } from '@/lib/microsite-data';
 import {
   generateOrganizationSchema,
   generateBreadcrumbSchema,
@@ -10,9 +11,6 @@ import {
   generateSectionMetadata,
   constructMetadata
 } from '@/lib/seo';
-
-// Reserve known paths
-const RESERVED_SLUGS = ['dashboard', 'auth', 'api', '_next', 'favicon.ico'];
 
 export default async function MicrositePage({
   params,
@@ -28,7 +26,6 @@ export default async function MicrositePage({
   }
 
   const [builderSlug, projectSlug, sectionSlug] = slugParts;
-  const APPROVED_SECTIONS = ['pricing', 'floor-plans', 'master-plan', 'connectivity', 'amenities', 'builder', 'faq'];
 
   if (sectionSlug && !APPROVED_SECTIONS.includes(sectionSlug)) {
     notFound();
@@ -41,28 +38,19 @@ export default async function MicrositePage({
     notFound();
   }
 
-  // Check if microsite exists and is published (or is being previewed)
-  const microsite = await prisma.microsite.findUnique({
-    where: { slug: fullSlug },
-  });
+  const result = await getMicrositeBySlug(fullSlug, isPreview);
 
-  if (!microsite || (microsite.status !== 'PUBLISHED' && !isPreview)) {
-    const redirectRecord = await prisma.slugRedirect.findUnique({
-      where: { oldSlug: fullSlug },
-    });
-    if (redirectRecord) {
-      redirect(`/${redirectRecord.newSlug}`);
-    }
+  if (!result) {
     notFound();
   }
 
-  const parseJsonField = (val: string | null | undefined, fallback: any = []) => {
-    if (!val) return fallback;
-    try { return JSON.parse(val); } catch { return fallback; }
-  };
+  if ('redirectUrl' in result && typeof result.redirectUrl === 'string') {
+    return redirect(`/${result.redirectUrl}`);
+  }
 
-  const pricing = parseJsonField(microsite.pricingData);
-  const faqs = parseJsonField(microsite.faqs);
+  const microsite = result as any;
+  const pricing = microsite.pricingData ?? [];
+  const faqs = microsite.faqs ?? [];
 
   const orgSchema = generateOrganizationSchema();
   const breadcrumbSchema = generateBreadcrumbSchema(
@@ -104,32 +92,42 @@ export default async function MicrositePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
-      <MicrositeView slug={fullSlug} projectName={microsite.projectName} sectionSlug={sectionSlug} />
+      <MicrositeView
+        slug={fullSlug}
+        projectName={microsite.projectName}
+        sectionSlug={sectionSlug}
+        initialData={microsite}
+      />
     </>
   );
 }
 
-export async function generateMetadata({ params }: { params: { slug: string[] } }) {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: { slug: string[] };
+  searchParams?: { preview?: string };
+}) {
   const slugParts = params?.slug ?? [];
   if (slugParts.length < 2 || slugParts.length > 3) {
     return { title: 'Not Found' };
   }
 
   const [builderSlug, projectSlug, sectionSlug] = slugParts;
-  const APPROVED_SECTIONS = ['pricing', 'floor-plans', 'master-plan', 'connectivity', 'amenities', 'builder', 'faq'];
 
   if (sectionSlug && !APPROVED_SECTIONS.includes(sectionSlug)) {
     return { title: 'Not Found' };
   }
 
   const fullSlug = `${builderSlug}/${projectSlug}`;
-  const microsite = await prisma.microsite.findUnique({
-    where: { slug: fullSlug },
-    select: { projectName: true, builderName: true, location: true, city: true, status: true, heroImages: true },
-  });
+  const isPreview = searchParams?.preview === 'true';
 
-  if (!microsite) return { title: 'Not Found' };
+  const result = await getMicrositeBySlug(fullSlug, isPreview);
 
+  if (!result || 'redirectUrl' in result) return { title: 'Not Found' };
+
+  const microsite = result as any;
   const isPublished = microsite.status === 'PUBLISHED';
   const { title, description } = generateSectionMetadata({
     projectName: microsite.projectName,
@@ -139,28 +137,15 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
     sectionSlug,
   });
 
-  const canonicalUrl = `https://www.11estates.in/${fullSlug}`;
-  const pageUrl = sectionSlug ? `${canonicalUrl}/${sectionSlug}` : canonicalUrl;
-
-  // Resolve hero image for Social Share Image
   let ogImageUrl = 'https://www.11estates.in/og-image.png';
-  let heroImages: string[] = [];
-  try {
-    heroImages = JSON.parse(microsite.heroImages || '[]');
-  } catch (e) {}
 
+  const heroImages = microsite.heroImageUrls ?? [];
   if (Array.isArray(heroImages) && heroImages.length > 0 && heroImages[0]) {
-    try {
-      const fileUrl = await getFileUrl(heroImages[0], 'image/jpeg', true);
-      if (fileUrl) {
-        if (fileUrl.startsWith('http')) {
-          ogImageUrl = fileUrl;
-        } else {
-          ogImageUrl = `https://www.11estates.in${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
-        }
-      }
-    } catch (e) {
-      console.error('Error resolving OG image:', e);
+    const fileUrl = heroImages[0];
+    if (fileUrl.startsWith('http')) {
+      ogImageUrl = fileUrl;
+    } else {
+      ogImageUrl = `https://www.11estates.in${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
     }
   }
 
@@ -169,8 +154,6 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
     description,
     path: sectionSlug ? `${fullSlug}/${sectionSlug}` : fullSlug,
     ogImage: ogImageUrl,
-    noindex: !isPublished
+    noindex: !isPublished,
   });
 }
-
-

@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { generateUniqueSlug } from '@/lib/seo-server';
+import { revalidateMicrositePaths } from '@/lib/microsite-data';
 
 // Auto-save: creates a DRAFT if new, or updates existing
 export async function POST(request: Request) {
@@ -86,6 +87,7 @@ export async function POST(request: Request) {
 
         console.log('Autosave updateData payload:', updateData);
         const microsite = await prisma.microsite.update({ where: { id }, data: updateData });
+        revalidateMicrositePaths(microsite.slug, existing.slug);
         return NextResponse.json({ microsite, isNew: false });
       } else {
         // Create new draft with this pre-generated id

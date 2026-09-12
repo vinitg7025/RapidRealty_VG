@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { revalidateMicrositePaths } from '@/lib/microsite-data';
 
 export async function POST(request: Request) {
   try {
@@ -21,11 +22,17 @@ export async function POST(request: Request) {
 
     const authWhere = role === 'ADMIN' ? {} : { createdById: userId };
 
+    const targetSites = await prisma.microsite.findMany({
+      where: { id: { in: ids }, ...authWhere },
+      select: { slug: true },
+    });
+
     if (action === 'publish') {
       await prisma.microsite.updateMany({
         where: { id: { in: ids }, ...authWhere },
         data: { status: 'PUBLISHED' },
       });
+      targetSites.forEach(s => revalidateMicrositePaths(s.slug));
       return NextResponse.json({ success: true, message: `${ids.length} microsites published.` });
     }
 
@@ -34,6 +41,7 @@ export async function POST(request: Request) {
         where: { id: { in: ids }, ...authWhere },
         data: { status: 'ARCHIVED' },
       });
+      targetSites.forEach(s => revalidateMicrositePaths(s.slug));
       return NextResponse.json({ success: true, message: `${ids.length} microsites archived.` });
     }
 
@@ -41,6 +49,7 @@ export async function POST(request: Request) {
       await prisma.microsite.deleteMany({
         where: { id: { in: ids }, ...authWhere },
       });
+      targetSites.forEach(s => revalidateMicrositePaths(s.slug));
       return NextResponse.json({ success: true, message: `${ids.length} microsites deleted.` });
     }
 
