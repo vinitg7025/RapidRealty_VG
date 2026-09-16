@@ -340,6 +340,9 @@ export default function MicrositeView({ slug, projectName, sectionSlug, initialD
     return true;
   });
 
+  const whatsappMessage = encodeURIComponent("Hi, I am interested in this property. I would like to know more.");
+  const whatsappUrl = `https://wa.me/918454989005?text=${whatsappMessage}`;
+
   return (
     <div className="min-h-screen bg-[#121212] font-sans antialiased text-[#a3a3a3] pb-20 md:pb-0">
       {/* Sticky Header & Nav Wrapper */}
@@ -381,13 +384,26 @@ export default function MicrositeView({ slug, projectName, sectionSlug, initialD
                 ))}
               </div>
             </div>
-            <a
-              href="tel:+918454989005"
-              className="hidden md:flex items-center gap-2 bg-white text-[#121212] px-6 py-2.5 text-xs font-semibold uppercase tracking-widest hover:bg-[#a3a3a3] transition-colors flex-shrink-0"
-            >
-              <Phone className="w-3.5 h-3.5" />
-              <span>Call: +91-8454989005</span>
-            </a>
+            <div className="hidden md:flex items-center gap-2.5 flex-shrink-0">
+              <a
+                href="tel:+918454989005"
+                aria-label="Call +91-84549 89005"
+                className="flex items-center gap-2 bg-white text-[#121212] px-4 py-2 text-xs font-semibold tracking-wider hover:bg-white/90 transition-colors flex-shrink-0"
+              >
+                <Phone className="w-3.5 h-3.5 text-[#121212]" />
+                <span>+91-84549 89005</span>
+              </a>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Contact on WhatsApp"
+                className="flex items-center gap-2 bg-[#121212] text-white border border-amber-500/40 hover:border-amber-500 hover:bg-[#1a1a1a] px-4 py-2 text-xs font-semibold tracking-wider transition-colors flex-shrink-0"
+              >
+                <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
+                <span>WhatsApp</span>
+              </a>
+            </div>
           </div>
         </nav>
       </div>
@@ -1165,17 +1181,28 @@ export default function MicrositeView({ slug, projectName, sectionSlug, initialD
         </div>
       )}
 
-      {/* Mobile sticky action bar (Call + Enquire) — hidden on desktop */}
+      {/* Mobile sticky action bar (Call + WhatsApp + Enquire) — hidden on desktop */}
       <div className="md:hidden fixed bottom-0 inset-x-0 z-[90] flex items-stretch gap-2 p-3 bg-[#121212]/95 backdrop-blur border-t border-white/10">
         <a
           href="tel:+918454989005"
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border border-amber-500/40 text-amber-500 text-xs font-semibold uppercase tracking-widest"
+          aria-label="Call +91-8454989005"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-lg border border-white/20 text-white text-xs font-semibold uppercase tracking-wider bg-[#1a1a1a] hover:bg-white/10 transition-colors"
         >
-          <Phone className="w-4 h-4" /> Call
+          <Phone className="w-3.5 h-3.5 text-white" /> Call
+        </a>
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Contact on WhatsApp"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-lg border border-amber-500/40 text-white text-xs font-semibold uppercase tracking-wider bg-[#121212] hover:border-amber-500 transition-colors"
+        >
+          <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" /> WhatsApp
         </a>
         <a
           href="#enquire"
-          className="flex-[1.4] flex items-center justify-center gap-2 py-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-[#0A0A0A] text-xs font-bold uppercase tracking-widest"
+          aria-label="Enquire Now"
+          className="flex-[1.2] flex items-center justify-center gap-1 py-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-[#0A0A0A] text-xs font-bold uppercase tracking-wider hover:brightness-110 transition-all"
         >
           Enquire Now
         </a>
@@ -1224,5 +1251,19 @@ function FaqItem({ question, answer, isOpen, onToggle }: { question: string; ans
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function WhatsAppIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="24"
+      height="24"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.461c-1.826 0-3.61-.492-5.176-1.424l-.371-.221-3.847 1.009 1.026-3.753-.243-.387c-.997-1.587-1.524-3.424-1.524-5.309 0-5.419 4.408-9.828 9.83-9.828 2.627 0 5.097 1.023 6.954 2.881 1.858 1.858 2.88 4.329 2.88 6.956 0 5.422-4.408 9.876-9.83 9.876m0-21.722C5.975.121.121 5.975.121 13.117c0 2.28.596 4.507 1.727 6.467L0 24l4.546-1.192c1.895 1.033 4.032 1.579 6.208 1.579 7.143 0 12.996-5.854 12.996-12.996 0-3.473-1.352-6.738-3.811-9.197C17.482 1.473 14.216.121 10.743.121" />
+    </svg>
   );
 }
