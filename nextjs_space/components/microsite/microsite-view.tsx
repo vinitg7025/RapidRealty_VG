@@ -388,9 +388,9 @@ export default function MicrositeView({ slug, projectName, sectionSlug, initialD
               <a
                 href="tel:+918454989005"
                 aria-label="Call +91-84549 89005"
-                className="flex items-center gap-2 bg-white text-[#121212] px-4 py-2 text-xs font-semibold tracking-wider hover:bg-white/90 transition-colors flex-shrink-0"
+                className="flex items-center gap-2 bg-[#121212] text-white border border-amber-500/40 hover:border-amber-500 hover:bg-[#1a1a1a] px-4 py-2 text-xs font-semibold tracking-wider transition-colors flex-shrink-0"
               >
-                <Phone className="w-3.5 h-3.5 text-[#121212]" />
+                <Phone className="w-3.5 h-3.5 text-white" />
                 <span>+91-84549 89005</span>
               </a>
               <a
